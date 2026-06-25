@@ -36,6 +36,7 @@ const Toast = {
 const App = {
   state: {
     currentFolder: 'root',
+    currentView:   'files', // 'files' | 'notes' | 'tasks'
     searchQuery:   '',
     sortBy:        'created_at',
     sortOrder:     'desc',
@@ -64,6 +65,7 @@ const App = {
 
     this._initControls();
     Upload.init();
+    Gallery.initActionSheet();
 
     await this.refresh();
   },
@@ -110,6 +112,75 @@ const App = {
     document.getElementById('new-folder-btn').addEventListener('click', () => {
       Folders.showCreateModal();
     });
+
+    // Hamburger menu (mobile)
+    const hamburger = document.getElementById('hamburger-btn');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    if (hamburger) {
+      hamburger.addEventListener('click', () => this.toggleSidebar());
+    }
+    if (backdrop) {
+      backdrop.addEventListener('click', () => this.closeSidebar());
+    }
+
+    // FAB menu toggle (mobile)
+    const fabBtn = document.getElementById('fab-btn');
+    const fabMenu = document.getElementById('fab-menu');
+    if (fabBtn && fabMenu) {
+      fabBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        fabMenu.classList.toggle('open');
+        fabBtn.classList.toggle('active');
+      });
+
+      document.getElementById('fab-upload-file').addEventListener('click', () => {
+        fabMenu.classList.remove('open');
+        fabBtn.classList.remove('active');
+        this.navigateToView('files');
+        document.getElementById('file-input').click();
+      });
+
+      document.getElementById('fab-new-note').addEventListener('click', () => {
+        fabMenu.classList.remove('open');
+        fabBtn.classList.remove('active');
+        this.navigateToView('notes');
+        Notes.createNote();
+      });
+
+      document.getElementById('fab-new-task').addEventListener('click', () => {
+        fabMenu.classList.remove('open');
+        fabBtn.classList.remove('active');
+        this.navigateToView('tasks');
+        setTimeout(() => {
+          const input = document.getElementById('task-input');
+          if (input) input.focus();
+        }, 100);
+      });
+
+      // Close menu when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!fabMenu.contains(e.target) && !fabBtn.contains(e.target)) {
+          fabMenu.classList.remove('open');
+          fabBtn.classList.remove('active');
+        }
+      });
+    }
+
+    // Escape key closes sidebar
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') this.closeSidebar();
+    });
+
+    // App nav (files / notes / tasks)
+    document.querySelectorAll('#app-nav .nav-item').forEach((btn) => {
+      btn.addEventListener('click', () => this.navigateToView(btn.dataset.view));
+    });
+
+    // New note button
+    const newNoteBtn = document.getElementById('new-note-btn');
+    if (newNoteBtn) {
+      newNoteBtn.addEventListener('click', () => Notes.createNote());
+    }
   },
 
   _setViewMode(mode) {
@@ -185,7 +256,51 @@ const App = {
     this.state.currentFolder = folder;
     this.state.searchQuery   = '';
     document.getElementById('search-input').value = '';
+    this.closeSidebar();
     this.refresh();
+  },
+
+  navigateToView(view) {
+    if (view === this.state.currentView) return;
+    this.state.currentView = view;
+
+    // Update sidebar active state
+    document.querySelectorAll('#app-nav .nav-item').forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.view === view);
+    });
+
+    const isFiles = view === 'files';
+
+    // Toggle main view containers
+    document.getElementById('files-view-wrapper').classList.toggle('hidden', !isFiles);
+    document.getElementById('notes-view').classList.toggle('hidden', view !== 'notes');
+    document.getElementById('tasks-view').classList.toggle('hidden', view !== 'tasks');
+
+    // Show/hide sidebar items specific to files
+    document.getElementById('new-folder-btn').classList.toggle('hidden', !isFiles);
+    document.getElementById('upload-label').classList.toggle('hidden', !isFiles);
+
+    // Show/hide folder sidebar section (second .sidebar-section)
+    const sections = document.querySelectorAll('.sidebar-section');
+    if (sections[1]) sections[1].classList.toggle('hidden', !isFiles);
+
+    this.closeSidebar();
+
+    // Load data for the view
+    if (view === 'notes') Notes.load();
+    if (view === 'tasks') Tasks.load();
+  },
+
+  /* ------------------------------------------------------------------ */
+  /*  Sidebar toggle (mobile)                                             */
+  /* ------------------------------------------------------------------ */
+
+  toggleSidebar() {
+    document.body.classList.toggle('sidebar-open');
+  },
+
+  closeSidebar() {
+    document.body.classList.remove('sidebar-open');
   },
 
   /* ------------------------------------------------------------------ */

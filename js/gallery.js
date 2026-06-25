@@ -8,6 +8,10 @@
 const Gallery = {
   /** Currently active lightbox URL */
   _lightboxUrl: null,
+  /** Currently selected file for bottom sheet */
+  _sheetFile: null,
+  /** Is the action sheet open */
+  _sheetOpen: false,
 
   /* ------------------------------------------------------------------ */
   /*  Main render                                                         */
@@ -99,6 +103,16 @@ const Gallery = {
     card.appendChild(actions);
 
     this._attachCardActions(card, file, publicUrl);
+
+    // Mobile: tap card to open bottom sheet
+    if (this._isMobile()) {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('[data-action]')) return;
+        this._openActionSheet(file, isImage);
+      });
+      card.style.cursor = 'pointer';
+    }
+
     return card;
   },
 
@@ -147,6 +161,16 @@ const Gallery = {
     `;
 
     this._attachCardActions(row, file, publicUrl);
+
+    // Mobile: tap row to open bottom sheet
+    if (this._isMobile()) {
+      row.addEventListener('click', (e) => {
+        if (e.target.closest('[data-action]')) return;
+        this._openActionSheet(file, isImage);
+      });
+      row.style.cursor = 'pointer';
+    }
+
     return row;
   },
 
@@ -282,5 +306,79 @@ const Gallery = {
 
   _esc(str = '') {
     return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  },
+
+  /* ------------------------------------------------------------------ */
+  /*  Action Sheet (mobile)                                               */
+  /* ------------------------------------------------------------------ */
+
+  _isMobile() {
+    return window.innerWidth <= 768 || ('ontouchstart' in window && navigator.maxTouchPoints > 0);
+  },
+
+  _openActionSheet(file, isImage) {
+    this._sheetFile = file;
+    this._sheetOpen = true;
+
+    const sheet = document.getElementById('action-sheet');
+    const filename = document.getElementById('action-sheet-filename');
+    const previewBtn = document.querySelector('.action-sheet-btn-preview');
+
+    filename.textContent = file.filename;
+
+    // Show/hide preview button based on file type
+    if (previewBtn) {
+      previewBtn.classList.toggle('hidden', !isImage);
+    }
+
+    // Wire up action buttons
+    const actionsContainer = document.getElementById('action-sheet-actions');
+    actionsContainer.onclick = (e) => {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      const action = btn.dataset.action;
+
+      if (action === 'download') this._downloadFile(file.storage_path, file.filename);
+      if (action === 'preview')  this._openLightbox(Storage.getPublicUrl(file.storage_path), file.filename);
+      if (action === 'move')     App.openMoveModal(file);
+      if (action === 'delete')   App.deleteFile(file);
+
+      this._closeActionSheet();
+    };
+
+    sheet.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  },
+
+  _closeActionSheet() {
+    this._sheetOpen = false;
+    this._sheetFile = null;
+
+    const sheet = document.getElementById('action-sheet');
+    sheet.classList.add('hidden');
+    document.body.style.overflow = '';
+  },
+
+  initActionSheet() {
+    const sheet = document.getElementById('action-sheet');
+    const backdrop = document.getElementById('action-sheet-backdrop');
+    const cancelBtn = document.getElementById('action-sheet-cancel');
+    const panel = sheet?.querySelector('.action-sheet-panel');
+
+    if (backdrop) backdrop.addEventListener('click', () => this._closeActionSheet());
+    if (cancelBtn) cancelBtn.addEventListener('click', () => this._closeActionSheet());
+
+    // Swipe down to dismiss
+    let startY = 0;
+    if (panel) {
+      panel.addEventListener('touchstart', (e) => {
+        startY = e.touches[0].clientY;
+      }, { passive: true });
+
+      panel.addEventListener('touchmove', (e) => {
+        const diff = e.touches[0].clientY - startY;
+        if (diff > 80) this._closeActionSheet();
+      }, { passive: true });
+    }
   },
 };

@@ -78,6 +78,36 @@
   </div>
 
   <!-- ============================================================
+       File Action Bottom Sheet (mobile)
+       ============================================================ -->
+  <div id="action-sheet" class="action-sheet hidden" role="dialog" aria-modal="true" aria-label="File actions">
+    <div class="action-sheet-backdrop" id="action-sheet-backdrop"></div>
+    <div class="action-sheet-panel">
+      <div class="action-sheet-handle"></div>
+      <div class="action-sheet-filename" id="action-sheet-filename"></div>
+      <div class="action-sheet-actions" id="action-sheet-actions">
+        <button class="action-sheet-btn" data-action="download">
+          <span class="action-sheet-btn-icon">↓</span>
+          <span>Download</span>
+        </button>
+        <button class="action-sheet-btn action-sheet-btn-preview" data-action="preview">
+          <span class="action-sheet-btn-icon">👁</span>
+          <span>Preview</span>
+        </button>
+        <button class="action-sheet-btn" data-action="move">
+          <span class="action-sheet-btn-icon">⤷</span>
+          <span>Move</span>
+        </button>
+        <button class="action-sheet-btn action-sheet-btn-danger" data-action="delete">
+          <span class="action-sheet-btn-icon">✕</span>
+          <span>Delete</span>
+        </button>
+      </div>
+      <button class="action-sheet-cancel" id="action-sheet-cancel">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ============================================================
        App Layout
        ============================================================ -->
   <div class="app-container">
@@ -106,6 +136,16 @@
         <span>New Folder</span>
       </button>
 
+      <!-- App navigation -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-title" aria-hidden="true">Sections</div>
+        <nav id="app-nav" aria-label="App sections">
+          <button class="nav-item active" data-view="files">📁 All Files</button>
+          <button class="nav-item" data-view="notes">📝 Notes <span class="nav-badge" id="notes-count"></span></button>
+          <button class="nav-item" data-view="tasks">✅ Tasks <span class="nav-badge" id="tasks-count"></span></button>
+        </nav>
+      </div>
+
       <!-- Folder navigation -->
       <div class="sidebar-section">
         <div class="sidebar-section-title" aria-hidden="true">Folders</div>
@@ -124,81 +164,134 @@
       </div>
     </aside>
 
+    <!-- Sidebar backdrop (mobile) -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop" aria-hidden="true"></div>
+
     <!-- ==================== Main Content ==================== -->
     <main class="main-content" id="main-content">
 
-      <!-- Top Bar -->
-      <header class="top-bar">
+      <!-- ==================== Files View ==================== -->
+      <div id="files-view-wrapper">
+        <!-- Top Bar -->
+        <header class="top-bar">
 
-        <!-- Breadcrumb trail -->
-        <nav class="breadcrumb" id="breadcrumb" aria-label="Folder path">
-          <span class="breadcrumb-item active" data-folder="root">All Files</span>
-        </nav>
+          <!-- Breadcrumb trail -->
+          <nav class="breadcrumb" id="breadcrumb" aria-label="Folder path">
+            <span class="breadcrumb-item active" data-folder="root">All Files</span>
+          </nav>
 
-        <!-- Controls row -->
-        <div class="top-bar-controls">
+          <!-- Controls row -->
+          <div class="top-bar-controls">
 
-          <!-- Search -->
-          <div class="search-container">
-            <span class="search-icon" aria-hidden="true">🔍</span>
-            <input
-              type="search"
-              id="search-input"
-              placeholder="Search files…"
-              class="search-input"
-              aria-label="Search files"
-              autocomplete="off"
-              spellcheck="false"
-            />
+            <!-- Hamburger (mobile only) -->
+            <button class="hamburger-btn" id="hamburger-btn" aria-label="Open menu">☰</button>
+
+            <!-- Search -->
+            <div class="search-container">
+              <span class="search-icon" aria-hidden="true">🔍</span>
+              <input
+                type="search"
+                id="search-input"
+                placeholder="Search files…"
+                class="search-input"
+                aria-label="Search files"
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </div>
+
+            <!-- Sort -->
+            <select id="sort-select" class="sort-select" aria-label="Sort files by">
+              <option value="created_at_desc">Newest first</option>
+              <option value="created_at_asc">Oldest first</option>
+              <option value="filename_asc">Name A → Z</option>
+              <option value="filename_desc">Name Z → A</option>
+              <option value="size_desc">Largest first</option>
+              <option value="size_asc">Smallest first</option>
+            </select>
+
+            <!-- Grid / List toggle -->
+            <div class="view-toggle" role="group" aria-label="View mode">
+              <button class="view-btn active" id="grid-view-btn" title="Grid view" aria-pressed="true" aria-label="Grid view">⊞</button>
+              <button class="view-btn"        id="list-view-btn" title="List view" aria-pressed="false" aria-label="List view">☰</button>
+            </div>
           </div>
+        </header>
 
-          <!-- Sort -->
-          <select id="sort-select" class="sort-select" aria-label="Sort files by">
-            <option value="created_at_desc">Newest first</option>
-            <option value="created_at_asc">Oldest first</option>
-            <option value="filename_asc">Name A → Z</option>
-            <option value="filename_desc">Name Z → A</option>
-            <option value="size_desc">Largest first</option>
-            <option value="size_asc">Smallest first</option>
-          </select>
-
-          <!-- Grid / List toggle -->
-          <div class="view-toggle" role="group" aria-label="View mode">
-            <button class="view-btn active" id="grid-view-btn" title="Grid view" aria-pressed="true" aria-label="Grid view">⊞</button>
-            <button class="view-btn"        id="list-view-btn" title="List view" aria-pressed="false" aria-label="List view">☰</button>
+        <!-- Drag-and-drop visual overlay (shown only during drag) -->
+        <div class="drop-zone-overlay hidden" id="drop-zone-overlay" aria-hidden="true">
+          <div class="drop-zone-content">
+            <div class="drop-zone-icon">📂</div>
+            <div class="drop-zone-text">Drop files here to upload</div>
           </div>
         </div>
-      </header>
 
-      <!-- Drag-and-drop visual overlay (shown only during drag) -->
-      <div class="drop-zone-overlay hidden" id="drop-zone-overlay" aria-hidden="true">
-        <div class="drop-zone-content">
-          <div class="drop-zone-icon">📂</div>
-          <div class="drop-zone-text">Drop files here to upload</div>
+        <!-- File count label -->
+        <div class="file-count" id="file-count" aria-live="polite"></div>
+
+        <!-- Files grid / list (content injected by gallery.js) -->
+        <div class="files-container grid-view" id="files-container" aria-label="Files" role="list"></div>
+
+        <!-- Empty state -->
+        <div class="empty-state hidden" id="empty-state" role="status">
+          <div class="empty-icon" aria-hidden="true">📂</div>
+          <div class="empty-title">No files here yet</div>
+          <div class="empty-subtitle">Click <strong>Upload Files</strong> or drag &amp; drop files to get started</div>
+        </div>
+
+        <!-- Loading state -->
+        <div class="loading-state hidden" id="loading-state" role="status" aria-label="Loading files">
+          <div class="spinner" aria-hidden="true"></div>
+          <div>Loading your files…</div>
         </div>
       </div>
 
-      <!-- File count label -->
-      <div class="file-count" id="file-count" aria-live="polite"></div>
+      <!-- ==================== Notes View ==================== -->
+      <section class="app-view hidden" id="notes-view" aria-label="Notes">
+        <div class="view-header">
+          <h2 class="view-title">📝 Notes</h2>
+          <button class="btn btn-primary" id="new-note-btn">New Note</button>
+        </div>
+        <div class="view-content" id="notes-container"></div>
+        <div class="note-editor hidden" id="note-editor">
+          <div class="note-editor-header">
+            <button class="btn btn-ghost" id="note-back-btn">← Back</button>
+            <span class="note-editor-hint">Auto-saves as you type</span>
+          </div>
+          <input type="text" id="note-title-input" placeholder="Note title..." maxlength="100" autocomplete="off" class="note-title-input" />
+          <textarea id="note-textarea" placeholder="Start writing..." class="note-textarea"></textarea>
+        </div>
+      </section>
 
-      <!-- Files grid / list (content injected by gallery.js) -->
-      <div class="files-container grid-view" id="files-container" aria-label="Files" role="list"></div>
-
-      <!-- Empty state -->
-      <div class="empty-state hidden" id="empty-state" role="status">
-        <div class="empty-icon" aria-hidden="true">📂</div>
-        <div class="empty-title">No files here yet</div>
-        <div class="empty-subtitle">Click <strong>Upload Files</strong> or drag &amp; drop files to get started</div>
-      </div>
-
-      <!-- Loading state -->
-      <div class="loading-state hidden" id="loading-state" role="status" aria-label="Loading files">
-        <div class="spinner" aria-hidden="true"></div>
-        <div>Loading your files…</div>
-      </div>
+      <!-- ==================== Tasks View ==================== -->
+      <section class="app-view hidden" id="tasks-view" aria-label="Tasks">
+        <div class="view-header">
+          <h2 class="view-title">✅ Tasks</h2>
+        </div>
+        <div class="view-content" id="tasks-container"></div>
+      </section>
 
     </main>
   </div>
+
+  <!-- Mobile FAB (floating action button) — opens action menu -->
+  <div class="fab-menu" id="fab-menu">
+    <button class="fab-menu-item" id="fab-upload-file">
+      <span class="fab-menu-icon">📁</span>
+      <span class="fab-menu-label">Upload File</span>
+    </button>
+    <button class="fab-menu-item" id="fab-new-note">
+      <span class="fab-menu-icon">📝</span>
+      <span class="fab-menu-label">New Note</span>
+    </button>
+    <button class="fab-menu-item" id="fab-new-task">
+      <span class="fab-menu-icon">✅</span>
+      <span class="fab-menu-label">New Task</span>
+    </button>
+  </div>
+  <button class="fab" id="fab-btn" aria-label="Create new">
+    <span class="fab-icon">+</span>
+  </button>
 
   <!-- ============================================================
        Scripts — load order matters!
@@ -221,6 +314,8 @@
   <script src="js/gallery.js"></script>
   <script src="js/folders.js"></script>
   <script src="js/upload.js"></script>
+  <script src="js/notes.js"></script>
+  <script src="js/tasks.js"></script>
 
   <!-- 6. App coordinator (boots on DOMContentLoaded) -->
   <script src="js/app.js"></script>

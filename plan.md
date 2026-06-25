@@ -61,6 +61,20 @@ Phase 3: Nice UI
 
 ✅ Drag & Drop Upload
 
+Phase 4: Notepad & Task Manager
+
+✅ Sidebar navigation (Files / Notes / Tasks)
+
+✅ Notepad — create, edit, delete notes
+
+✅ Auto-save for notes (500ms debounce)
+
+✅ Task Manager — add, toggle, delete tasks
+
+✅ Task filters (All / Active / Completed)
+
+✅ Badge counters on sidebar nav
+
 Supabase Setup
 Storage Buckets
 

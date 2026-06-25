@@ -161,4 +161,134 @@ const DB = {
     if (error) throw new Error(`DB.getTotalSize: ${error.message}`);
     return (data || []).reduce((sum, row) => sum + (row.size || 0), 0);
   },
+
+  /* ------------------------------------------------------------------ */
+  /*  NOTES                                                               */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * Get all notes, most recently updated first.
+   * @returns {Promise<Array>}
+   */
+  async getNotes() {
+    const { data, error } = await supabaseClient
+      .from('notes')
+      .select('*')
+      .order('updated_at', { ascending: false });
+
+    if (error) throw new Error(`DB.getNotes: ${error.message}`);
+    return data || [];
+  },
+
+  /**
+   * Insert a new note.
+   * @param {{ title, content }} note
+   * @returns {Promise<Object>} The inserted row.
+   */
+  async insertNote({ title, content }) {
+    const { data, error } = await supabaseClient
+      .from('notes')
+      .insert([{ title, content }])
+      .select()
+      .single();
+
+    if (error) throw new Error(`DB.insertNote: ${error.message}`);
+    return data;
+  },
+
+  /**
+   * Update a note's title, content, or both.
+   * @param {string} id
+   * @param {Object} updates - { title?, content? }
+   * @returns {Promise<Object>} The updated row.
+   */
+  async updateNote(id, updates) {
+    const { data, error } = await supabaseClient
+      .from('notes')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw new Error(`DB.updateNote: ${error.message}`);
+    return data;
+  },
+
+  /**
+   * Delete a note by ID.
+   * @param {string} id
+   */
+  async deleteNote(id) {
+    const { error } = await supabaseClient
+      .from('notes')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw new Error(`DB.deleteNote: ${error.message}`);
+  },
+
+  /* ------------------------------------------------------------------ */
+  /*  TASKS                                                               */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * Get all tasks, most recently created first.
+   * @returns {Promise<Array>}
+   */
+  async getTasks() {
+    const { data, error } = await supabaseClient
+      .from('tasks')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw new Error(`DB.getTasks: ${error.message}`);
+    return data || [];
+  },
+
+  /**
+   * Insert a new task.
+   * @param {string} title
+   * @returns {Promise<Object>} The inserted row.
+   */
+  async insertTask(title) {
+    const { data, error } = await supabaseClient
+      .from('tasks')
+      .insert([{ title }])
+      .select()
+      .single();
+
+    if (error) throw new Error(`DB.insertTask: ${error.message}`);
+    return data;
+  },
+
+  /**
+   * Update a task (completed, title, or due_date).
+   * @param {string} id
+   * @param {Object} updates - { completed?, title?, due_date? }
+   * @returns {Promise<Object>} The updated row.
+   */
+  async updateTask(id, updates) {
+    const { data, error } = await supabaseClient
+      .from('tasks')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw new Error(`DB.updateTask: ${error.message}`);
+    return data;
+  },
+
+  /**
+   * Delete a task by ID.
+   * @param {string} id
+   */
+  async deleteTask(id) {
+    const { error } = await supabaseClient
+      .from('tasks')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw new Error(`DB.deleteTask: ${error.message}`);
+  },
 };
