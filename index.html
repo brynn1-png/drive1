@@ -248,10 +248,13 @@
 
       <!-- ==================== Notes View ==================== -->
       <section class="app-view hidden" id="notes-view" aria-label="Notes">
-        <div class="view-header">
+        <header class="top-bar">
+          <button class="hamburger-btn" id="hamburger-btn-notes" aria-label="Open menu">☰</button>
           <h2 class="view-title">📝 Notes</h2>
-          <button class="btn btn-primary" id="new-note-btn">New Note</button>
-        </div>
+          <div class="top-bar-controls">
+            <button class="btn btn-primary" id="new-note-btn">New Note</button>
+          </div>
+        </header>
         <div class="view-content" id="notes-container"></div>
         <div class="note-editor hidden" id="note-editor">
           <div class="note-editor-header">
@@ -265,9 +268,11 @@
 
       <!-- ==================== Tasks View ==================== -->
       <section class="app-view hidden" id="tasks-view" aria-label="Tasks">
-        <div class="view-header">
+        <header class="top-bar">
+          <button class="hamburger-btn" id="hamburger-btn-tasks" aria-label="Open menu">☰</button>
           <h2 class="view-title">✅ Tasks</h2>
-        </div>
+          <div class="top-bar-controls"></div>
+        </header>
         <div class="view-content" id="tasks-container"></div>
       </section>
 

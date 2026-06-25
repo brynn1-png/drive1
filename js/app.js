@@ -115,10 +115,12 @@ const App = {
 
     // Hamburger menu (mobile)
     const hamburger = document.getElementById('hamburger-btn');
+    const hamburgerNotes = document.getElementById('hamburger-btn-notes');
+    const hamburgerTasks = document.getElementById('hamburger-btn-tasks');
     const backdrop = document.getElementById('sidebar-backdrop');
-    if (hamburger) {
-      hamburger.addEventListener('click', () => this.toggleSidebar());
-    }
+    [hamburger, hamburgerNotes, hamburgerTasks].forEach((btn) => {
+      if (btn) btn.addEventListener('click', () => this.toggleSidebar());
+    });
     if (backdrop) {
       backdrop.addEventListener('click', () => this.closeSidebar());
     }
