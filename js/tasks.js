@@ -88,7 +88,15 @@ const Tasks = {
     if (filtered.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'task-empty';
-      empty.textContent = total === 0 ? 'No tasks yet — add one above' : 'No tasks match this filter';
+      if (total === 0) {
+        empty.innerHTML = `
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.15;margin:0 auto 12px;display:block"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <div>No tasks yet</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-top:4px">Add a task above to get started</div>
+        `;
+      } else {
+        empty.textContent = 'No tasks match this filter';
+      }
       container.appendChild(empty);
     } else {
       const list = document.createElement('div');
@@ -115,7 +123,7 @@ const Tasks = {
         del.className = 'task-delete-btn';
         del.dataset.action = 'delete-task';
         del.dataset.id = task.id;
-        del.innerHTML = '&times;';
+        del.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
         del.setAttribute('aria-label', 'Delete task');
 
         row.appendChild(checkbox);

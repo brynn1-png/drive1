@@ -93,9 +93,9 @@ const Gallery = {
     const actions = document.createElement('div');
     actions.className = 'file-card-actions';
     actions.innerHTML = `
-      <button class="action-btn" title="Download" data-action="download" data-id="${file.id}">↓</button>
-      <button class="action-btn" title="Move to folder" data-action="move" data-id="${file.id}">⤷</button>
-      <button class="action-btn danger" title="Delete" data-action="delete" data-id="${file.id}">✕</button>
+      <button class="action-btn" title="Download" data-action="download" data-id="${file.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+      <button class="action-btn" title="Move to folder" data-action="move" data-id="${file.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg></button>
+      <button class="action-btn danger" title="Delete" data-action="delete" data-id="${file.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
     `;
 
     card.appendChild(preview);
@@ -153,10 +153,10 @@ const Gallery = {
       <div class="list-col col-type">${this._getTypeLabel(file.file_type)}</div>
       <div class="list-col col-date">${this._formatDate(file.created_at)}</div>
       <div class="list-col col-actions">
-        <button class="action-btn" title="Download" data-action="download" data-id="${file.id}">↓</button>
-        ${isImage ? `<button class="action-btn" title="Preview" data-action="preview" data-id="${file.id}">👁</button>` : ''}
-        <button class="action-btn" title="Move to folder" data-action="move" data-id="${file.id}">⤷</button>
-        <button class="action-btn danger" title="Delete" data-action="delete" data-id="${file.id}">✕</button>
+        <button class="action-btn" title="Download" data-action="download" data-id="${file.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+        ${isImage ? `<button class="action-btn" title="Preview" data-action="preview" data-id="${file.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>` : ''}
+        <button class="action-btn" title="Move to folder" data-action="move" data-id="${file.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg></button>
+        <button class="action-btn danger" title="Delete" data-action="delete" data-id="${file.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
       </div>
     `;
 
@@ -261,19 +261,15 @@ const Gallery = {
   /* ------------------------------------------------------------------ */
 
   _getIcon(mimeType = '') {
-    if (!mimeType) return '📄';
-    if (mimeType.startsWith('image/'))       return '🖼';
-    if (mimeType.startsWith('video/'))       return '🎬';
-    if (mimeType.startsWith('audio/'))       return '🎵';
-    if (mimeType === 'application/pdf')      return '📑';
-    if (mimeType.includes('zip') || mimeType.includes('tar') || mimeType.includes('gz') || mimeType.includes('rar')) return '📦';
-    if (mimeType.startsWith('text/'))        return '📝';
-    if (mimeType.includes('json'))           return '🔧';
-    if (mimeType.includes('javascript') || mimeType.includes('typescript')) return '💻';
-    if (mimeType.includes('spreadsheet') || mimeType.includes('excel'))    return '📊';
-    if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return '📽';
-    if (mimeType.includes('word') || mimeType.includes('document'))        return '📃';
-    return '📄';
+    if (!mimeType) return '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+    if (mimeType.startsWith('image/')) return '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+    if (mimeType.startsWith('video/')) return '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>';
+    if (mimeType.startsWith('audio/')) return '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
+    if (mimeType === 'application/pdf') return '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>';
+    if (mimeType.includes('zip') || mimeType.includes('tar') || mimeType.includes('gz') || mimeType.includes('rar')) return '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V3h13l5 5z"/><path d="M12 3v6h6"/></svg>';
+    if (mimeType.startsWith('text/')) return '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>';
+    if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>';
+    return '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
   },
 
   _getTypeLabel(mimeType = '') {

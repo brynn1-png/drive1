@@ -22,7 +22,7 @@ const Folders = {
     list.appendChild(this._buildFolderItem({
       name: 'root',
       label: 'All Files',
-      icon: '🏠',
+      icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
       active: activeFolder === 'root',
     }));
 
@@ -31,7 +31,7 @@ const Folders = {
       list.appendChild(this._buildFolderItem({
         name: f.name,
         label: f.name,
-        icon: '📁',
+        icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',
         active: activeFolder === f.name,
       }));
     });
@@ -42,12 +42,14 @@ const Folders = {
     item.className = `folder-item ${active ? 'active' : ''}`;
     item.dataset.folder = name;
 
+    const deleteBtnHtml = name !== 'root'
+      ? `<button class="folder-delete-btn" data-folder="${this._esc(name)}" title="Delete folder"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`
+      : '';
+
     item.innerHTML = `
       <span class="folder-item-icon">${icon}</span>
       <span class="folder-item-label">${this._esc(label)}</span>
-      ${name !== 'root'
-        ? `<button class="folder-delete-btn" data-folder="${this._esc(name)}" title="Delete folder">✕</button>`
-        : ''}
+      ${deleteBtnHtml}
     `;
 
     // Navigate on click (but not the delete button)
