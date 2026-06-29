@@ -78,6 +78,27 @@
   </div>
 
   <!-- ============================================================
+       Project Modal (Create / Rename)
+       ============================================================ -->
+  <div id="project-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="project-modal-title">
+    <div class="modal-card">
+      <h3 id="project-modal-title">Create New Project</h3>
+      <input
+        type="text"
+        id="project-name-input"
+        placeholder="e.g. Work, Personal, Side Project…"
+        maxlength="60"
+        aria-label="Project name"
+        autocomplete="off"
+      />
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="project-modal-cancel">Cancel</button>
+        <button class="btn btn-primary" id="project-modal-confirm">Create Project</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
        File Action Bottom Sheet (mobile)
        ============================================================ -->
   <div id="action-sheet" class="action-sheet hidden" role="dialog" aria-modal="true" aria-label="File actions">
@@ -150,6 +171,12 @@
       <div class="sidebar-section">
         <div class="sidebar-section-title" aria-hidden="true">Folders</div>
         <nav id="folder-list" aria-label="Folder navigation"></nav>
+      </div>
+
+      <!-- Projects navigation -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-title" aria-hidden="true">Projects <span class="nav-badge" id="projects-count"></span></div>
+        <nav id="project-list" aria-label="Project navigation"></nav>
       </div>
 
       <!-- Storage usage indicator -->
@@ -318,6 +345,7 @@
   <!-- 5. UI modules -->
   <script src="js/gallery.js"></script>
   <script src="js/folders.js"></script>
+  <script src="js/projects.js"></script>
   <script src="js/upload.js"></script>
   <script src="js/notes.js"></script>
   <script src="js/tasks.js"></script>

@@ -66,6 +66,7 @@ const App = {
     this._initControls();
     Upload.init();
     Gallery.initActionSheet();
+    await Projects.load();
 
     await this.refresh();
   },
@@ -285,6 +286,9 @@ const App = {
     // Show/hide folder sidebar section (second .sidebar-section)
     const sections = document.querySelectorAll('.sidebar-section');
     if (sections[1]) sections[1].classList.toggle('hidden', !isFiles);
+
+    // Show/hide projects sidebar section (third .sidebar-section)
+    if (sections[2]) sections[2].classList.toggle('hidden', view !== 'tasks');
 
     this.closeSidebar();
 

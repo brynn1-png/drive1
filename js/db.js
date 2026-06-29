@@ -228,19 +228,99 @@ const DB = {
   },
 
   /* ------------------------------------------------------------------ */
+  /*  PROJECTS                                                            */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * Get all projects, sorted by name.
+   * @returns {Promise<Array>}
+   */
+  async getProjects() {
+    const { data, error } = await supabaseClient
+      .from('projects')
+      .select('*')
+      .order('name', { ascending: true });
+
+    if (error) throw new Error(`DB.getProjects: ${error.message}`);
+    return data || [];
+  },
+
+  /**
+   * Create a new project.
+   * @param {string} name
+   * @returns {Promise<Object>} The inserted row.
+   */
+  async createProject(name) {
+    const { data, error } = await supabaseClient
+      .from('projects')
+      .insert([{ name }])
+      .select()
+      .single();
+
+    if (error) throw new Error(`DB.createProject: ${error.message}`);
+    return data;
+  },
+
+  /**
+   * Rename a project.
+   * @param {string} id
+   * @param {string} newName
+   * @returns {Promise<Object>} The updated row.
+   */
+  async renameProject(id, newName) {
+    const { data, error } = await supabaseClient
+      .from('projects')
+      .update({ name: newName })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw new Error(`DB.renameProject: ${error.message}`);
+    return data;
+  },
+
+  /**
+   * Delete a project. Tasks with this project_id become uncategorized (SET NULL via FK).
+   * @param {string} id
+   */
+  async deleteProject(id) {
+    const { error } = await supabaseClient
+      .from('projects')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw new Error(`DB.deleteProject: ${error.message}`);
+  },
+
+  /* ------------------------------------------------------------------ */
   /*  TASKS                                                               */
   /* ------------------------------------------------------------------ */
 
   /**
-   * Get all tasks, most recently created first.
+   * Get tasks with optional project filter.
+   * @param {Object} opts
+   * @param {string|null} opts.projectId - UUID of project, 'uncategorized' for null project_id, or null/undefined for all
+   * @param {string} [opts.filter] - 'all' | 'active' | 'completed'
    * @returns {Promise<Array>}
    */
-  async getTasks() {
-    const { data, error } = await supabaseClient
-      .from('tasks')
-      .select('*')
-      .order('created_at', { ascending: false });
+  async getTasks({ projectId = null, filter = 'all' } = {}) {
+    let query = supabaseClient.from('tasks').select('*');
 
+    if (projectId === 'uncategorized') {
+      query = query.is('project_id', null);
+    } else if (projectId) {
+      query = query.eq('project_id', projectId);
+    }
+
+    if (filter === 'active') {
+      query = query.eq('completed', false);
+    } else if (filter === 'completed') {
+      query = query.eq('completed', true);
+    }
+
+    query = query.order('created_at', { ascending: false });
+
+    const { data, error } = await query;
     if (error) throw new Error(`DB.getTasks: ${error.message}`);
     return data || [];
   },
@@ -248,12 +328,16 @@ const DB = {
   /**
    * Insert a new task.
    * @param {string} title
+   * @param {string|null} projectId - Optional project UUID
    * @returns {Promise<Object>} The inserted row.
    */
-  async insertTask(title) {
+  async insertTask(title, projectId = null) {
+    const row = { title };
+    if (projectId) row.project_id = projectId;
+
     const { data, error } = await supabaseClient
       .from('tasks')
-      .insert([{ title }])
+      .insert([row])
       .select()
       .single();
 

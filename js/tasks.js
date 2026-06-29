@@ -6,6 +6,7 @@
 
 const Tasks = {
   _tasks: [],
+  _allTasks: [],
   _filter: 'all', // 'all' | 'active' | 'completed'
 
   /* ------------------------------------------------------------------ */
@@ -13,7 +14,10 @@ const Tasks = {
   /* ------------------------------------------------------------------ */
 
   async load() {
-    this._tasks = await DB.getTasks();
+    const projectId = Projects._activeProjectId;
+    // Fetch all tasks (no status filter) so filter tabs stay visible
+    this._allTasks = await DB.getTasks({ projectId, filter: 'all' });
+    this._tasks = this._applyStatusFilter(this._allTasks);
     this.render();
     this._updateCount();
   },
@@ -22,11 +26,32 @@ const Tasks = {
     const container = document.getElementById('tasks-container');
     if (!container) return;
 
-    const filtered = this._getFiltered();
-    const completed = this._tasks.filter((t) => t.completed).length;
-    const total = this._tasks.length;
+    const filtered = this._tasks;
+    const completed = this._allTasks.filter((t) => t.completed).length;
+    const total = this._allTasks.length;
 
     container.innerHTML = '';
+
+    // Project filter pills
+    const projectBar = document.createElement('div');
+    projectBar.className = 'task-project-bar';
+    const projectPills = [
+      { id: null, label: 'All Tasks' },
+      { id: 'uncategorized', label: 'Uncategorized' },
+      ...Projects._projects.map(p => ({ id: p.id, label: p.name })),
+    ];
+    projectBar.innerHTML = `<div class="task-project-pills" id="task-project-pills">
+      ${projectPills.map(p => `<button class="task-project-pill${(Projects._activeProjectId === p.id) ? ' active' : ''}" data-project-id="${p.id || ''}">${this._esc(p.label)}</button>`).join('')}
+    </div>`;
+    container.appendChild(projectBar);
+
+    projectBar.querySelectorAll('.task-project-pill').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        Projects._activeProjectId = btn.dataset.projectId || null;
+        Projects.renderSidebar();
+        this.load();
+      });
+    });
 
     // Input bar
     const inputBar = document.createElement('div');
@@ -52,6 +77,7 @@ const Tasks = {
       toolbar.querySelectorAll('.task-filter-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
           this._filter = btn.dataset.filter;
+          this._tasks = this._applyStatusFilter(this._allTasks);
           this.render();
         });
         if (btn.dataset.filter === this._filter) btn.classList.add('active');
@@ -123,12 +149,13 @@ const Tasks = {
   },
 
   async toggleTask(id) {
-    const task = this._tasks.find((t) => t.id === id);
+    const task = this._allTasks.find((t) => t.id === id);
     if (!task) return;
     try {
       const updated = await DB.updateTask(id, { completed: !task.completed });
-      const idx = this._tasks.findIndex((t) => t.id === id);
-      if (idx !== -1) this._tasks[idx] = updated;
+      const idx = this._allTasks.findIndex((t) => t.id === id);
+      if (idx !== -1) this._allTasks[idx] = updated;
+      this._tasks = this._applyStatusFilter(this._allTasks);
       this.render();
       this._updateCount();
     } catch (err) {
@@ -140,7 +167,8 @@ const Tasks = {
   async deleteTask(id) {
     try {
       await DB.deleteTask(id);
-      this._tasks = this._tasks.filter((t) => t.id !== id);
+      this._allTasks = this._allTasks.filter((t) => t.id !== id);
+      this._tasks = this._applyStatusFilter(this._allTasks);
       this.render();
       this._updateCount();
       Toast.show('Task deleted.', 'success');
@@ -160,9 +188,12 @@ const Tasks = {
     const title = input.value.trim();
     if (!title) return;
 
+    const projectId = Projects._activeProjectId === 'uncategorized' ? null : Projects._activeProjectId;
+
     try {
-      const task = await DB.insertTask(title);
-      this._tasks.unshift(task);
+      const task = await DB.insertTask(title, projectId);
+      this._allTasks.unshift(task);
+      this._tasks = this._applyStatusFilter(this._allTasks);
       input.value = '';
       this.render();
       this._updateCount();
@@ -173,16 +204,24 @@ const Tasks = {
   },
 
   _getFiltered() {
-    if (this._filter === 'active') return this._tasks.filter((t) => !t.completed);
-    if (this._filter === 'completed') return this._tasks.filter((t) => t.completed);
-    return [...this._tasks];
+    return this._applyStatusFilter(this._allTasks);
+  },
+
+  _applyStatusFilter(tasks) {
+    if (this._filter === 'active') return tasks.filter((t) => !t.completed);
+    if (this._filter === 'completed') return tasks.filter((t) => t.completed);
+    return [...tasks];
   },
 
   _updateCount() {
     const badge = document.getElementById('tasks-count');
     if (badge) {
-      const active = this._tasks.filter((t) => !t.completed).length;
+      const active = this._allTasks.filter((t) => !t.completed).length;
       badge.textContent = active || '';
     }
+  },
+
+  _esc(str = '') {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   },
 };

@@ -30,12 +30,20 @@ create table if not exists notes (
   updated_at timestamptz default now()
 );
 
+-- Projects table
+create table if not exists projects (
+  id uuid default gen_random_uuid() primary key,
+  name text not null unique,
+  created_at timestamptz default now()
+);
+
 -- Tasks table (new)
 create table if not exists tasks (
   id uuid default gen_random_uuid() primary key,
   title text not null,
   completed boolean default false,
   due_date date,
+  project_id uuid references projects(id) on delete set null,
   created_at timestamptz default now()
 );
 
@@ -45,6 +53,8 @@ create index if not exists idx_files_filename on files(filename);
 create index if not exists idx_notes_updated_at on notes(updated_at desc);
 create index if not exists idx_tasks_created_at on tasks(created_at desc);
 create index if not exists idx_tasks_completed on tasks(completed);
+create index if not exists idx_tasks_project_id on tasks(project_id);
+create index if not exists idx_projects_name on projects(name);
 
 -- ============================================================
 -- Row Level Security (RLS)
@@ -55,3 +65,4 @@ alter table files disable row level security;
 alter table folders disable row level security;
 alter table notes disable row level security;
 alter table tasks disable row level security;
+alter table projects disable row level security;

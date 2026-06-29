@@ -213,6 +213,9 @@ img    { display: block; max-width: 100%; }
   text-transform: uppercase;
   color: var(--text-muted);
   padding: 0 20px 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 /* Folder items */
@@ -260,6 +263,58 @@ img    { display: block; max-width: 100%; }
 
 .folder-item:hover .folder-delete-btn { opacity: 1; }
 .folder-delete-btn:hover { background: var(--error-bg); }
+
+/* Project rename button */
+.project-rename-btn {
+  opacity: 0;
+  font-size: 10px;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.folder-item:hover .project-rename-btn { opacity: 1; }
+.project-rename-btn:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+
+/* Task project filter pills */
+.task-project-bar {
+  padding: 12px 0;
+  flex-shrink: 0;
+}
+
+.task-project-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.task-project-pill {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.task-project-pill:hover {
+  color: var(--text-secondary);
+}
+
+.task-project-pill.active {
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--accent-light);
+  border-color: var(--border-accent);
+}
 
 /* Sidebar footer — storage info */
 .sidebar-footer {
