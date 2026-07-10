@@ -1321,6 +1321,47 @@ img    { display: block; max-width: 100%; }
   overflow: hidden;
 }
 
+.note-card-actions-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.note-card-pin {
+  opacity: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: var(--transition);
+}
+
+.note-card-pin.active {
+  opacity: 1;
+  color: var(--lime);
+}
+
+.note-card:hover .note-card-pin { opacity: 1; }
+.note-card-pin:hover { background: rgba(200, 255, 0, 0.15); color: var(--lime); }
+
+.note-card.pinned {
+  border-color: var(--lime);
+}
+
+.note-card.pinned .note-card-title::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: var(--lime);
+  margin-right: 6px;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
 .note-card-footer {
   display: flex;
   align-items: center;
@@ -1367,6 +1408,13 @@ img    { display: block; max-width: 100%; }
   justify-content: space-between;
   flex-shrink: 0;
 }
+
+.note-pin-btn.active {
+  color: var(--lime);
+  border-color: var(--lime);
+}
+
+.note-pin-btn svg { flex-shrink: 0; }
 
 .note-editor-hint {
   font-size: 12px;
@@ -1866,7 +1914,173 @@ body.sidebar-open .sidebar-backdrop {
 .action-sheet-btn-preview.hidden { display: none; }
 
 /* ============================================================
-   32. Responsive — Tablet (<= 768px)
+   32. Auth Screen
+   ============================================================ */
+.auth-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  background: var(--bg-sidebar);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: center;
+}
+
+.auth-logo {
+  font-size: 32px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -1px;
+  margin-bottom: 4px;
+}
+
+.auth-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.auth-desc {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 700;
+  margin-top: -8px;
+}
+
+.auth-error {
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid var(--error);
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--error);
+}
+
+.auth-error.success {
+  border-color: var(--success);
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--success);
+}
+
+.auth-input {
+  width: 100%;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  transition: var(--transition);
+  outline: none;
+}
+
+.auth-input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+  font-weight: 400;
+}
+
+.auth-input:focus {
+  border-color: var(--lime);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.auth-submit {
+  width: 100%;
+  justify-content: center;
+  padding: 14px;
+  font-size: 15px;
+  margin-top: 4px;
+}
+
+.auth-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: var(--shadow-accent);
+}
+
+.auth-toggle-text {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.auth-toggle-btn {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--lime);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
+  padding: 0;
+}
+
+.auth-toggle-btn:hover {
+  text-decoration: underline;
+  color: #d4ff00;
+}
+
+/* User info in sidebar */
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.user-email {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.logout-btn:hover {
+  color: var(--error);
+  border-color: var(--error);
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.logout-btn svg { flex-shrink: 0; }
+
+/* ============================================================
+   33. Responsive — Tablet (<= 768px)
    ============================================================ */
 @media (max-width: 768px) {
   :root { --sidebar-width: 260px; }

@@ -62,17 +62,20 @@ const Storage = {
 
   /**
    * Build a unique storage path for a file.
-   * Format: "{folder}/{timestamp}-{sanitized-filename}"
+   * Format: "{user_id}/{folder}/{timestamp}-{sanitized-filename}"
    *
    * @param {string} folder   - Folder name (e.g. 'Photos', 'root')
    * @param {string} filename - Original filename
    * @returns {string}
    */
   buildStoragePath(folder, filename) {
+    const userId = Auth.getUserId();
+    if (!userId) throw new Error('Storage: not authenticated');
+
     const timestamp = Date.now();
     const sanitized = filename
-      .replace(/[^a-zA-Z0-9._-]/g, '_')  // replace unsafe chars
-      .replace(/_+/g, '_');               // collapse multiple underscores
-    return `${folder}/${timestamp}-${sanitized}`;
+      .replace(/[^a-zA-Z0-9._-]/g, '_')
+      .replace(/_+/g, '_');
+    return `${userId}/${folder}/${timestamp}-${sanitized}`;
   },
 };

@@ -57,19 +57,29 @@ const Notes = {
       const title = this._esc(note.title || 'Untitled');
       const snippet = this._esc((note.content || 'Empty note').slice(0, 120));
       const date = this._formatDate(note.updated_at || note.created_at);
+      const pinnedClass = note.pinned ? ' pinned' : '';
+      const pinIcon = note.pinned
+        ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L8 10H3l5 4-2 8 6-5 6 5-2-8 5-4h-5z"/></svg>'
+        : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L8 10H3l5 4-2 8 6-5 6 5-2-8 5-4h-5z"/></svg>';
+
+      card.className = `note-card${pinnedClass}`;
+      card.dataset.id = note.id;
 
       card.innerHTML = `
+        <div class="note-card-actions-row">
+          <button class="note-card-pin${note.pinned ? ' active' : ''}" data-action="pin-note" data-id="${note.id}" title="${note.pinned ? 'Unpin note' : 'Pin to top'}">${pinIcon}</button>
+          <button class="note-card-delete" data-action="delete-note" data-id="${note.id}" title="Delete note">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
         <div class="note-card-title">${title}</div>
         <div class="note-card-snippet">${snippet}</div>
         <div class="note-card-footer">
           <span class="note-card-date">${date}</span>
-          <button class="note-card-delete" data-action="delete-note" data-id="${note.id}" title="Delete note">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
         </div>`;
 
       card.addEventListener('click', (e) => {
-        if (e.target.closest('[data-action="delete-note"]')) return;
+        if (e.target.closest('[data-action]')) return;
         this.openNote(note.id);
       });
 
@@ -84,6 +94,13 @@ const Notes = {
         this.deleteNote(btn.dataset.id);
       });
     });
+
+    container.querySelectorAll('[data-action="pin-note"]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.togglePin(btn.dataset.id);
+      });
+    });
   },
 
   openNote(id) {
@@ -95,12 +112,21 @@ const Notes = {
     const titleInput = document.getElementById('note-title-input');
     const textarea = document.getElementById('note-textarea');
     const backBtn = document.getElementById('note-back-btn');
+    const pinBtn = document.getElementById('note-pin-btn');
 
     titleInput.value = note.title || '';
     textarea.value = note.content || '';
 
     if (backBtn) {
       backBtn.onclick = () => this.closeNote();
+    }
+
+    if (pinBtn) {
+      pinBtn.onclick = () => this.togglePin(id);
+      pinBtn.classList.toggle('active', note.pinned);
+      pinBtn.innerHTML = note.pinned
+        ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L8 10H3l5 4-2 8 6-5 6 5-2-8 5-4h-5z"/></svg> Unpin'
+        : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L8 10H3l5 4-2 8 6-5 6 5-2-8 5-4h-5z"/></svg> Pin';
     }
 
     this.render();
@@ -138,6 +164,25 @@ const Notes = {
     } catch (err) {
       console.error(err);
       Toast.show('Failed to delete note.', 'error');
+    }
+  },
+
+  async togglePin(id) {
+    const note = this._notes.find((n) => n.id === id);
+    if (!note) return;
+    try {
+      const updated = await DB.updateNote(id, { pinned: !note.pinned });
+      const idx = this._notes.findIndex((n) => n.id === id);
+      if (idx !== -1) this._notes[idx] = updated;
+      this._notes.sort((a, b) => {
+        if (a.pinned !== b.pinned) return b.pinned ? 1 : -1;
+        return new Date(b.updated_at) - new Date(a.updated_at);
+      });
+      this.render();
+      Toast.show(note.pinned ? 'Note unpinned.' : 'Note pinned to top.', 'success');
+    } catch (err) {
+      console.error(err);
+      Toast.show('Failed to update note.', 'error');
     }
   },
 

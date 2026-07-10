@@ -6,19 +6,20 @@
  */
 
 const DB = {
+  _uid() {
+    const userId = Auth.getUserId();
+    if (!userId) throw new Error('DB: not authenticated');
+    return userId;
+  },
+
   /* ------------------------------------------------------------------ */
   /*  FILES                                                               */
   /* ------------------------------------------------------------------ */
 
-  /**
-   * Insert a new file record into the `files` table.
-   * @param {{ filename, storage_path, size, file_type, folder }} meta
-   * @returns {Promise<Object>} The inserted row.
-   */
   async insertFile({ filename, storage_path, size, file_type, folder }) {
     const { data, error } = await supabaseClient
       .from('files')
-      .insert([{ filename, storage_path, size, file_type, folder }])
+      .insert([{ filename, storage_path, size, file_type, folder, user_id: this._uid() }])
       .select()
       .single();
 
@@ -26,24 +27,13 @@ const DB = {
     return data;
   },
 
-  /**
-   * Query files with optional folder filter, search, and sort.
-   * @param {Object} opts
-   * @param {string}  opts.folder     - e.g. 'root' | 'Photos'
-   * @param {string}  [opts.search]   - substring match on filename
-   * @param {string}  [opts.sortBy]   - column name: 'filename' | 'size' | 'created_at'
-   * @param {string}  [opts.sortOrder]- 'asc' | 'desc'
-   * @returns {Promise<Array>}
-   */
   async getFiles({ folder = 'root', search = '', sortBy = 'created_at', sortOrder = 'desc' } = {}) {
-    let query = supabaseClient.from('files').select('*');
+    let query = supabaseClient.from('files').select('*').eq('user_id', this._uid());
 
-    // Folder filter — empty string means "all files" (used during search)
     if (folder && folder !== '__all__') {
       query = query.eq('folder', folder);
     }
 
-    // Search filter
     if (search.trim()) {
       query = query.ilike('filename', `%${search.trim()}%`);
     }
@@ -55,30 +45,22 @@ const DB = {
     return data || [];
   },
 
-  /**
-   * Delete a file record by ID.
-   * @param {string} id - uuid
-   */
   async deleteFile(id) {
     const { error } = await supabaseClient
       .from('files')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('user_id', this._uid());
 
     if (error) throw new Error(`DB.deleteFile: ${error.message}`);
   },
 
-  /**
-   * Move a file to a different folder (updates the `folder` field only).
-   * The storage path remains unchanged.
-   * @param {string} id
-   * @param {string} newFolder
-   */
   async moveFile(id, newFolder) {
     const { error } = await supabaseClient
       .from('files')
       .update({ folder: newFolder })
-      .eq('id', id);
+      .eq('id', id)
+      .eq('user_id', this._uid());
 
     if (error) throw new Error(`DB.moveFile: ${error.message}`);
   },
@@ -87,29 +69,21 @@ const DB = {
   /*  FOLDERS                                                             */
   /* ------------------------------------------------------------------ */
 
-  /**
-   * Get all user-created folders, sorted by name.
-   * @returns {Promise<Array>}
-   */
   async getFolders() {
     const { data, error } = await supabaseClient
       .from('folders')
       .select('*')
+      .eq('user_id', this._uid())
       .order('name', { ascending: true });
 
     if (error) throw new Error(`DB.getFolders: ${error.message}`);
     return data || [];
   },
 
-  /**
-   * Create a new folder.
-   * @param {string} name
-   * @returns {Promise<Object>} The inserted folder row.
-   */
   async createFolder(name) {
     const { data, error } = await supabaseClient
       .from('folders')
-      .insert([{ name }])
+      .insert([{ name, user_id: this._uid() }])
       .select()
       .single();
 
@@ -117,46 +91,37 @@ const DB = {
     return data;
   },
 
-  /**
-   * Delete a folder by name. Files inside are moved to 'root'.
-   * @param {string} name
-   */
   async deleteFolder(name) {
-    // Move all files in this folder to root first
+    const uid = this._uid();
+
     await supabaseClient
       .from('files')
       .update({ folder: 'root' })
-      .eq('folder', name);
+      .eq('folder', name)
+      .eq('user_id', uid);
 
     const { error } = await supabaseClient
       .from('folders')
       .delete()
-      .eq('name', name);
+      .eq('name', name)
+      .eq('user_id', uid);
 
     if (error) throw new Error(`DB.deleteFolder: ${error.message}`);
   },
 
-  /**
-   * Count files in a folder (used for storage stats sidebar).
-   * @param {string} [folder]
-   * @returns {Promise<number>}
-   */
   async countFiles(folder) {
-    let query = supabaseClient.from('files').select('id', { count: 'exact', head: true });
+    let query = supabaseClient.from('files').select('id', { count: 'exact', head: true }).eq('user_id', this._uid());
     if (folder) query = query.eq('folder', folder);
     const { count, error } = await query;
     if (error) throw new Error(`DB.countFiles: ${error.message}`);
     return count || 0;
   },
 
-  /**
-   * Get total used storage (sum of all file sizes).
-   * @returns {Promise<number>} Total bytes
-   */
   async getTotalSize() {
     const { data, error } = await supabaseClient
       .from('files')
-      .select('size');
+      .select('size')
+      .eq('user_id', this._uid());
 
     if (error) throw new Error(`DB.getTotalSize: ${error.message}`);
     return (data || []).reduce((sum, row) => sum + (row.size || 0), 0);
@@ -166,29 +131,22 @@ const DB = {
   /*  NOTES                                                               */
   /* ------------------------------------------------------------------ */
 
-  /**
-   * Get all notes, most recently updated first.
-   * @returns {Promise<Array>}
-   */
   async getNotes() {
     const { data, error } = await supabaseClient
       .from('notes')
       .select('*')
+      .eq('user_id', this._uid())
+      .order('pinned', { ascending: false })
       .order('updated_at', { ascending: false });
 
     if (error) throw new Error(`DB.getNotes: ${error.message}`);
     return data || [];
   },
 
-  /**
-   * Insert a new note.
-   * @param {{ title, content }} note
-   * @returns {Promise<Object>} The inserted row.
-   */
   async insertNote({ title, content }) {
     const { data, error } = await supabaseClient
       .from('notes')
-      .insert([{ title, content }])
+      .insert([{ title, content, user_id: this._uid() }])
       .select()
       .single();
 
@@ -196,17 +154,12 @@ const DB = {
     return data;
   },
 
-  /**
-   * Update a note's title, content, or both.
-   * @param {string} id
-   * @param {Object} updates - { title?, content? }
-   * @returns {Promise<Object>} The updated row.
-   */
   async updateNote(id, updates) {
     const { data, error } = await supabaseClient
       .from('notes')
       .update({ ...updates, updated_at: new Date().toISOString() })
       .eq('id', id)
+      .eq('user_id', this._uid())
       .select()
       .single();
 
@@ -214,15 +167,12 @@ const DB = {
     return data;
   },
 
-  /**
-   * Delete a note by ID.
-   * @param {string} id
-   */
   async deleteNote(id) {
     const { error } = await supabaseClient
       .from('notes')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('user_id', this._uid());
 
     if (error) throw new Error(`DB.deleteNote: ${error.message}`);
   },
@@ -231,29 +181,21 @@ const DB = {
   /*  PROJECTS                                                            */
   /* ------------------------------------------------------------------ */
 
-  /**
-   * Get all projects, sorted by name.
-   * @returns {Promise<Array>}
-   */
   async getProjects() {
     const { data, error } = await supabaseClient
       .from('projects')
       .select('*')
+      .eq('user_id', this._uid())
       .order('name', { ascending: true });
 
     if (error) throw new Error(`DB.getProjects: ${error.message}`);
     return data || [];
   },
 
-  /**
-   * Create a new project.
-   * @param {string} name
-   * @returns {Promise<Object>} The inserted row.
-   */
   async createProject(name) {
     const { data, error } = await supabaseClient
       .from('projects')
-      .insert([{ name }])
+      .insert([{ name, user_id: this._uid() }])
       .select()
       .single();
 
@@ -261,17 +203,12 @@ const DB = {
     return data;
   },
 
-  /**
-   * Rename a project.
-   * @param {string} id
-   * @param {string} newName
-   * @returns {Promise<Object>} The updated row.
-   */
   async renameProject(id, newName) {
     const { data, error } = await supabaseClient
       .from('projects')
       .update({ name: newName })
       .eq('id', id)
+      .eq('user_id', this._uid())
       .select()
       .single();
 
@@ -279,15 +216,12 @@ const DB = {
     return data;
   },
 
-  /**
-   * Delete a project. Tasks with this project_id become uncategorized (SET NULL via FK).
-   * @param {string} id
-   */
   async deleteProject(id) {
     const { error } = await supabaseClient
       .from('projects')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('user_id', this._uid());
 
     if (error) throw new Error(`DB.deleteProject: ${error.message}`);
   },
@@ -296,15 +230,8 @@ const DB = {
   /*  TASKS                                                               */
   /* ------------------------------------------------------------------ */
 
-  /**
-   * Get tasks with optional project filter.
-   * @param {Object} opts
-   * @param {string|null} opts.projectId - UUID of project, 'uncategorized' for null project_id, or null/undefined for all
-   * @param {string} [opts.filter] - 'all' | 'active' | 'completed'
-   * @returns {Promise<Array>}
-   */
   async getTasks({ projectId = null, filter = 'all' } = {}) {
-    let query = supabaseClient.from('tasks').select('*');
+    let query = supabaseClient.from('tasks').select('*').eq('user_id', this._uid());
 
     if (projectId === 'uncategorized') {
       query = query.is('project_id', null);
@@ -325,14 +252,8 @@ const DB = {
     return data || [];
   },
 
-  /**
-   * Insert a new task.
-   * @param {string} title
-   * @param {string|null} projectId - Optional project UUID
-   * @returns {Promise<Object>} The inserted row.
-   */
   async insertTask(title, projectId = null) {
-    const row = { title };
+    const row = { title, user_id: this._uid() };
     if (projectId) row.project_id = projectId;
 
     const { data, error } = await supabaseClient
@@ -345,17 +266,12 @@ const DB = {
     return data;
   },
 
-  /**
-   * Update a task (completed, title, or due_date).
-   * @param {string} id
-   * @param {Object} updates - { completed?, title?, due_date? }
-   * @returns {Promise<Object>} The updated row.
-   */
   async updateTask(id, updates) {
     const { data, error } = await supabaseClient
       .from('tasks')
       .update(updates)
       .eq('id', id)
+      .eq('user_id', this._uid())
       .select()
       .single();
 
@@ -363,15 +279,12 @@ const DB = {
     return data;
   },
 
-  /**
-   * Delete a task by ID.
-   * @param {string} id
-   */
   async deleteTask(id) {
     const { error } = await supabaseClient
       .from('tasks')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('user_id', this._uid());
 
     if (error) throw new Error(`DB.deleteTask: ${error.message}`);
   },

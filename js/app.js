@@ -55,7 +55,6 @@ const App = {
   /* ------------------------------------------------------------------ */
 
   async init() {
-    // Validate config
     if (SUPABASE_URL.includes('YOUR_PROJECT_ID') || SUPABASE_ANON_KEY.includes('YOUR_SUPABASE_ANON_KEY')) {
       document.getElementById('loading-state').classList.add('hidden');
       document.getElementById('files-container').innerHTML = `
@@ -69,6 +68,9 @@ const App = {
       `;
       return;
     }
+
+    // Wait for authentication before mounting the app
+    await Auth.init();
 
     this._initControls();
     Upload.init();
