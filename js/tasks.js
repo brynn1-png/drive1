@@ -32,35 +32,6 @@ const Tasks = {
 
     container.innerHTML = '';
 
-    // Project filter pills
-    const projectBar = document.createElement('div');
-    projectBar.className = 'task-project-bar';
-    const projectPills = [
-      { id: null, label: 'All Tasks' },
-      { id: 'uncategorized', label: 'Uncategorized' },
-      ...Projects._projects.map(p => ({ id: p.id, label: p.name })),
-    ];
-    projectBar.innerHTML = `<div class="task-project-pills" id="task-project-pills">
-      ${projectPills.map(p => `<button class="task-project-pill${(Projects._activeProjectId === p.id) ? ' active' : ''}" data-project-id="${p.id || ''}">${this._esc(p.label)}</button>`).join('')}
-    </div>`;
-    container.appendChild(projectBar);
-
-    projectBar.querySelectorAll('.task-project-pill').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        Projects._activeProjectId = btn.dataset.projectId || null;
-        Projects.renderSidebar();
-        this.load();
-      });
-    });
-
-    // Input bar
-    const inputBar = document.createElement('div');
-    inputBar.className = 'task-input-bar';
-    inputBar.innerHTML = `
-      <input type="text" id="task-input" placeholder="Add a new task..." maxlength="200" autocomplete="off" />
-      <button class="btn btn-primary task-add-btn" id="task-add-btn">Add</button>`;
-    container.appendChild(inputBar);
-
     // Filter tabs + stats
     if (total > 0) {
       const toolbar = document.createElement('div');
@@ -128,6 +99,17 @@ const Tasks = {
 
         row.appendChild(checkbox);
         row.appendChild(label);
+
+        if (task.project_id) {
+          const project = Projects._projects.find(p => p.id === task.project_id);
+          if (project) {
+            const badge = document.createElement('span');
+            badge.className = 'task-project-badge';
+            badge.textContent = project.name;
+            row.appendChild(badge);
+          }
+        }
+
         row.appendChild(del);
         list.appendChild(row);
       }
@@ -141,18 +123,6 @@ const Tasks = {
       list.querySelectorAll('[data-action="delete-task"]').forEach((btn) => {
         btn.addEventListener('click', () => this.deleteTask(btn.dataset.id));
       });
-    }
-
-    // Wire input events
-    const input = document.getElementById('task-input');
-    const addBtn = document.getElementById('task-add-btn');
-
-    if (addBtn) addBtn.addEventListener('click', () => this._addFromInput());
-    if (input) {
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') this._addFromInput();
-      });
-      input.focus();
     }
   },
 
@@ -173,6 +143,14 @@ const Tasks = {
   },
 
   async deleteTask(id) {
+    const confirmed = await Confirm.show({
+      title: 'Delete Task?',
+      description: 'Delete this task? This cannot be undone.',
+      confirmText: 'Delete',
+      type: 'danger',
+    });
+    if (!confirmed) return;
+
     try {
       await DB.deleteTask(id);
       this._allTasks = this._allTasks.filter((t) => t.id !== id);
@@ -186,23 +164,47 @@ const Tasks = {
     }
   },
 
+  showCreateModal() {
+    const modal = document.getElementById('task-create-modal');
+    const input = document.getElementById('task-create-input');
+    const confirmBtn = document.getElementById('task-create-confirm');
+    const cancelBtn = document.getElementById('task-create-cancel');
+
+    input.value = '';
+    modal.classList.remove('hidden');
+    setTimeout(() => input.focus(), 50);
+
+    const cleanup = () => {
+      Confirm.hideModal('task-create-modal');
+      confirmBtn.onclick = null;
+      cancelBtn.onclick = null;
+      modal.onclick = null;
+      input.onkeydown = null;
+    };
+
+    confirmBtn.onclick = async () => {
+      const title = input.value.trim();
+      if (!title) { input.focus(); return; }
+      cleanup();
+      await this._createTask(title);
+    };
+
+    cancelBtn.onclick = cleanup;
+    modal.onclick = (e) => { if (e.target === modal) cleanup(); };
+    input.onkeydown = (e) => { if (e.key === 'Enter') confirmBtn.click(); };
+  },
+
   /* ------------------------------------------------------------------ */
   /*  Private helpers                                                     */
   /* ------------------------------------------------------------------ */
 
-  async _addFromInput() {
-    const input = document.getElementById('task-input');
-    if (!input) return;
-    const title = input.value.trim();
-    if (!title) return;
-
+  async _createTask(title) {
     const projectId = Projects._activeProjectId === 'uncategorized' ? null : Projects._activeProjectId;
 
     try {
       const task = await DB.insertTask(title, projectId);
       this._allTasks.unshift(task);
       this._tasks = this._applyStatusFilter(this._allTasks);
-      input.value = '';
       this.render();
       this._updateCount();
     } catch (err) {

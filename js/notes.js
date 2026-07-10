@@ -21,17 +21,8 @@ const Notes = {
 
   render() {
     const container = document.getElementById('notes-container');
-    const editor = document.getElementById('note-editor');
     if (!container) return;
 
-    if (this._activeNoteId) {
-      container.classList.add('hidden');
-      editor.classList.remove('hidden');
-      return;
-    }
-
-    container.classList.remove('hidden');
-    editor.classList.add('hidden');
     container.innerHTML = '';
 
     if (this._notes.length === 0) {
@@ -114,6 +105,8 @@ const Notes = {
     const backBtn = document.getElementById('note-back-btn');
     const pinBtn = document.getElementById('note-pin-btn');
 
+    const editor = document.getElementById('note-editor');
+
     titleInput.value = note.title || '';
     textarea.value = note.content || '';
 
@@ -129,8 +122,7 @@ const Notes = {
         : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L8 10H3l5 4-2 8 6-5 6 5-2-8 5-4h-5z"/></svg> Pin';
     }
 
-    this.render();
-
+    editor.classList.remove('hidden');
     textarea.focus();
     this._attachAutoSave();
   },
@@ -138,22 +130,53 @@ const Notes = {
   closeNote() {
     this._activeNoteId = null;
     clearTimeout(this._saveTimer);
-    this.render();
+    document.getElementById('note-editor').classList.add('hidden');
   },
 
   async createNote() {
-    try {
-      const note = await DB.insertNote({ title: 'Untitled', content: '' });
-      this._notes.unshift(note);
-      this.openNote(note.id);
-    } catch (err) {
-      console.error(err);
-      Toast.show('Failed to create note.', 'error');
-    }
+    const modal = document.getElementById('note-create-modal');
+    const input = document.getElementById('note-create-input');
+    const confirmBtn = document.getElementById('note-create-confirm');
+    const cancelBtn = document.getElementById('note-create-cancel');
+
+    input.value = '';
+    modal.classList.remove('hidden');
+    setTimeout(() => input.focus(), 50);
+
+    const cleanup = () => {
+      Confirm.hideModal('note-create-modal');
+      confirmBtn.onclick = null;
+      cancelBtn.onclick = null;
+      modal.onclick = null;
+      input.onkeydown = null;
+    };
+
+    confirmBtn.onclick = async () => {
+      const title = input.value.trim() || 'Untitled';
+      cleanup();
+      try {
+        const note = await DB.insertNote({ title, content: '' });
+        this._notes.unshift(note);
+        this.openNote(note.id);
+      } catch (err) {
+        console.error(err);
+        Toast.show('Failed to create note.', 'error');
+      }
+    };
+
+    cancelBtn.onclick = cleanup;
+    modal.onclick = (e) => { if (e.target === modal) cleanup(); };
+    input.onkeydown = (e) => { if (e.key === 'Enter') confirmBtn.click(); };
   },
 
   async deleteNote(id) {
-    if (!confirm('Delete this note? This cannot be undone.')) return;
+    const confirmed = await Confirm.show({
+      title: 'Delete Note?',
+      description: 'Delete this note? This cannot be undone.',
+      confirmText: 'Delete',
+      type: 'danger',
+    });
+    if (!confirmed) return;
     try {
       await DB.deleteNote(id);
       this._notes = this._notes.filter((n) => n.id !== id);

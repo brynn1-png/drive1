@@ -103,8 +103,16 @@ const Auth = {
     }
 
     if (logoutBtn) {
-      logoutBtn.addEventListener('click', () => this.signOut());
+      logoutBtn.addEventListener('click', () => this._showSignOutModal());
     }
+
+    // Sign-up success modal
+    const signupOk = document.getElementById('signup-success-ok');
+    if (signupOk) signupOk.addEventListener('click', () => {
+      this._hideModal('signup-success-modal');
+      this._mode = 'signin';
+      this._toggleMode();
+    });
   },
 
   _toggleMode() {
@@ -157,11 +165,9 @@ const Auth = {
       } else {
         const result = await this.signUp(email, password);
         if (!result.session) {
-          this._showError('Account created! Check your email to confirm sign-in.', 'success');
-          this._mode = 'signin';
-          this._toggleMode();
+          this._showModal('signup-success-modal');
           submitBtn.disabled = false;
-          submitBtn.textContent = 'Sign In';
+          submitBtn.textContent = 'Create Account';
           return;
         }
       }
@@ -178,5 +184,26 @@ const Auth = {
     errorEl.textContent = msg;
     errorEl.className = `auth-error ${type}`;
     errorEl.classList.remove('hidden');
+  },
+
+  _showModal(id) {
+    Confirm.showModal(id);
+  },
+
+  _hideModal(id) {
+    Confirm.hideModal(id);
+  },
+
+  _showSignOutModal() {
+    Confirm.show({
+      title: 'Sign Out?',
+      description: 'Are you sure you want to sign out?',
+      confirmText: 'Sign Out',
+      cancelText: 'Cancel',
+      type: 'danger',
+      icon: Confirm._icons.exit,
+    }).then((confirmed) => {
+      if (confirmed) this.signOut();
+    });
   },
 };

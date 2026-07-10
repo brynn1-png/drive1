@@ -146,7 +146,7 @@ const Folders = {
   },
 
   hideMoveModal() {
-    document.getElementById('move-modal').classList.add('hidden');
+    Confirm.hideModal('move-modal');
   },
 
   /* ------------------------------------------------------------------ */
@@ -164,7 +164,7 @@ const Folders = {
     const cancel  = document.getElementById('folder-modal-cancel');
 
     const cleanup = () => {
-      modal.classList.add('hidden');
+      Confirm.hideModal('folder-modal');
       confirm.onclick = null;
       cancel.onclick  = null;
       modal.onclick   = null;

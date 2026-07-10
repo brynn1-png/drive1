@@ -150,7 +150,7 @@ const Projects = {
     setTimeout(() => input.focus(), 50);
 
     const cleanup = () => {
-      modal.classList.add('hidden');
+      Confirm.hideModal('project-modal');
       confirm.onclick = null;
       document.getElementById('project-modal-cancel').onclick = null;
       modal.onclick = null;
@@ -188,7 +188,7 @@ const Projects = {
     setTimeout(() => { input.focus(); input.select(); }, 50);
 
     const cleanup = () => {
-      modal.classList.add('hidden');
+      Confirm.hideModal('project-modal');
       confirm.onclick = null;
       document.getElementById('project-modal-cancel').onclick = null;
       modal.onclick = null;
@@ -217,7 +217,14 @@ const Projects = {
   async deleteProject(id) {
     const project = this._projects.find(p => p.id === id);
     if (!project) return;
-    if (!confirm(`Delete project "${project.name}"? Tasks in this project will become uncategorized.`)) return;
+
+    const confirmed = await Confirm.show({
+      title: 'Delete Project?',
+      description: `Delete project "${project.name}"? Tasks in this project will become uncategorized.`,
+      confirmText: 'Delete',
+      type: 'danger',
+    });
+    if (!confirmed) return;
 
     try {
       await DB.deleteProject(id);

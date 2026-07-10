@@ -112,42 +112,97 @@ img    { display: block; max-width: 100%; }
 }
 
 /* ============================================================
-   4. Sidebar
+   4. Sidebar — fixed on all sizes, slides on toggle
    ============================================================ */
 .sidebar {
+  position: fixed;
+  top: 0;
+  left: calc(-1 * var(--sidebar-width));
   width: var(--sidebar-width);
-  min-width: var(--sidebar-width);
+  height: 100vh;
+  z-index: 500;
   background: var(--bg-sidebar);
   border-right: 2px solid var(--border);
   display: flex;
   flex-direction: column;
-  gap: 0;
-  padding: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  transition: left 0.2s var(--ease);
+}
+
+body.sidebar-open .sidebar {
+  left: 0;
+}
+
+.main-content {
+  transition: margin-left 0.2s var(--ease);
+}
+
+@media (min-width: 769px) {
+  body.sidebar-open .main-content {
+    margin-left: var(--sidebar-width);
+  }
+
+  body:not(.sidebar-open) .main-content {
+    margin-left: 0;
+  }
+
+  .sidebar-backdrop { display: none !important; }
+}
+
+@media (max-width: 768px) {
+  .main-content { margin-left: 0; }
 }
 
 .sidebar-header {
-  padding: 20px 20px 16px;
+  padding: 16px 16px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sidebar-collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: var(--transition);
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.sidebar-collapse-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
 }
 
 .logo {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  overflow: hidden;
 }
 
 .logo-icon {
   display: flex;
   align-items: center;
   color: var(--lime);
+  flex-shrink: 0;
 }
 
 .logo-text {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--text-inverse);
   letter-spacing: -1px;
+  white-space: nowrap;
 }
 
 /* Upload button */
@@ -214,6 +269,54 @@ img    { display: block; max-width: 100%; }
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+/* Collapsible section groups */
+.sidebar-section-group {
+  margin-bottom: 4px;
+}
+
+.sidebar-section-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 20px;
+  background: none;
+  border: none;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.sidebar-section-toggle:hover {
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.section-chevron {
+  transition: transform 0.2s var(--ease);
+  flex-shrink: 0;
+}
+
+.sidebar-section-group.collapsed .section-chevron {
+  transform: rotate(-90deg);
+}
+
+.sidebar-section-content {
+  overflow: hidden;
+  max-height: 500px;
+  transition: max-height 0.25s var(--ease), opacity 0.2s var(--ease);
+  opacity: 1;
+}
+
+.sidebar-section-group.collapsed .sidebar-section-content {
+  max-height: 0;
+  opacity: 0;
 }
 
 /* New folder button */
@@ -327,43 +430,6 @@ img    { display: block; max-width: 100%; }
 
 .folder-item:hover .project-delete-btn { opacity: 1; }
 .project-delete-btn:hover { background: rgba(239, 68, 68, 0.2); }
-
-/* Task project filter pills */
-.task-project-bar {
-  padding: 12px 0;
-  flex-shrink: 0;
-}
-
-.task-project-pills {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.task-project-pill {
-  padding: 6px 14px;
-  font-size: 12px;
-  font-weight: 700;
-  color: #555555;
-  background: #ffffff;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  transition: var(--transition);
-  cursor: pointer;
-  user-select: none;
-}
-
-.task-project-pill:hover {
-  color: var(--text-primary);
-  background: var(--bg-card-hover);
-}
-
-.task-project-pill.active {
-  background: var(--accent);
-  color: #ffffff;
-  border-color: var(--border);
-  box-shadow: 2px 2px 0 #1c1c1c;
-}
 
 /* Sidebar footer — storage info */
 .sidebar-footer {
@@ -693,14 +759,6 @@ img    { display: block; max-width: 100%; }
   display: flex;
   gap: 4px;
   padding: 0 8px 10px;
-  opacity: 0;
-  transform: translateY(4px);
-  transition: var(--transition);
-}
-
-.file-card:hover .file-card-actions {
-  opacity: 1;
-  transform: translateY(0);
 }
 
 /* ============================================================
@@ -799,11 +857,7 @@ img    { display: block; max-width: 100%; }
 .list-row .col-actions {
   display: flex;
   gap: 4px;
-  opacity: 0;
-  transition: var(--transition);
 }
-
-.list-row:hover .col-actions { opacity: 1; }
 
 .list-row .action-btn {
   padding: 5px 8px;
@@ -976,6 +1030,35 @@ img    { display: block; max-width: 100%; }
 /* ============================================================
    16. Modals
    ============================================================ */
+/* ============================================================
+   15. Modal Animations
+   ============================================================ */
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes modalFadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes modalScaleIn {
+  from { opacity: 0; transform: scale(0.9) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes modalScaleOut {
+  from { opacity: 1; transform: scale(1) translateY(0); }
+  to   { opacity: 0; transform: scale(0.9) translateY(10px); }
+}
+
+@keyframes iconPopIn {
+  0%   { opacity: 0; transform: scale(0.3); }
+  60%  { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
 .modal {
   position: fixed;
   inset: 0;
@@ -985,6 +1068,20 @@ img    { display: block; max-width: 100%; }
   align-items: center;
   justify-content: center;
   padding: 20px;
+  animation: modalFadeIn 0.2s var(--ease) forwards;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal.modal-closing {
+  pointer-events: none;
+  animation: modalFadeOut 0.15s var(--ease) forwards;
+}
+
+.modal.modal-closing .modal-card {
+  animation: modalScaleOut 0.15s var(--ease) forwards;
 }
 
 .modal-card {
@@ -999,6 +1096,7 @@ img    { display: block; max-width: 100%; }
   display: flex;
   flex-direction: column;
   gap: 20px;
+  animation: modalScaleIn 0.25s var(--ease) forwards;
 }
 
 .modal-card h3 {
@@ -1118,6 +1216,89 @@ img    { display: block; max-width: 100%; }
   color: var(--text-primary);
   transform: translate(2px, 2px);
   box-shadow: 1px 1px 0 #1c1c1c;
+}
+
+.btn-danger {
+  background: var(--error);
+  color: #ffffff;
+  border: 2px solid var(--border);
+  box-shadow: 3px 3px 0 #1c1c1c;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 #1c1c1c;
+}
+
+.btn-danger:active {
+  transform: translate(3px, 3px);
+  box-shadow: none;
+}
+
+.auth-success-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
+  border-radius: var(--radius-full);
+  background: rgba(34, 197, 94, 0.15);
+  border: 2px solid var(--success);
+  color: var(--success);
+}
+
+.auth-success-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 700;
+  text-align: center;
+}
+
+/* Reusable confirmation modal */
+.confirm-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--border);
+  animation: iconPopIn 0.35s var(--ease) 0.1s both;
+}
+
+.confirm-icon.confirm-danger {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.confirm-icon.confirm-warning {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: var(--warning);
+  color: var(--warning);
+}
+
+.confirm-icon.confirm-success {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.confirm-icon.confirm-info {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: var(--info);
+  color: var(--info);
+}
+
+.confirm-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 700;
+  text-align: center;
+  margin-top: -8px;
 }
 
 /* ============================================================
@@ -1623,6 +1804,17 @@ img    { display: block; max-width: 100%; }
   font-weight: 700;
 }
 
+.task-project-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.6);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .task-delete-btn {
   opacity: 0;
   width: 28px;
@@ -1650,26 +1842,37 @@ img    { display: block; max-width: 100%; }
 }
 
 /* ============================================================
-   28. Hamburger Button (hidden on desktop)
+   28. Sidebar Expand Tab (visible when sidebar is collapsed)
    ============================================================ */
-.hamburger-btn {
+.sidebar-expand-tab {
+  position: fixed;
+  top: var(--topbar-height);
+  left: 0;
+  width: 20px;
+  height: 48px;
   display: none;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  background: var(--bg-input);
+  background: var(--bg-card);
   border: 2px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-left: none;
+  z-index: 90;
+  cursor: pointer;
   color: var(--text-secondary);
-  flex-shrink: 0;
   transition: var(--transition);
+  box-shadow: var(--shadow-sm);
 }
 
-.hamburger-btn:hover {
-  background: var(--bg-card-hover);
-  color: var(--text-primary);
-  border-color: var(--border-hover);
+.sidebar-expand-tab:hover {
+  background: var(--lime);
+  color: var(--text-inverse);
+  border-color: var(--text-primary);
+}
+
+@media (min-width: 769px) {
+  body:not(.sidebar-open) .sidebar-expand-tab {
+    display: flex;
+  }
 }
 
 /* ============================================================
@@ -1685,9 +1888,14 @@ img    { display: block; max-width: 100%; }
   transition: opacity 0.2s var(--ease);
 }
 
-body.sidebar-open .sidebar-backdrop {
-  display: block;
-  opacity: 1;
+@media (max-width: 768px) {
+  .sidebar-backdrop {
+    display: block;
+  }
+
+  body.sidebar-open .sidebar-backdrop {
+    opacity: 1;
+  }
 }
 
 /* ============================================================
@@ -1789,132 +1997,79 @@ body.sidebar-open .sidebar-backdrop {
 }
 
 /* ============================================================
-   31. File Action Bottom Sheet (mobile)
+   32. Notes — Split Pane
    ============================================================ */
-.action-sheet {
-  position: fixed;
-  inset: 0;
-  z-index: 1600;
+.notes-split {
+  flex: 1;
   display: flex;
-  align-items: flex-end;
-  justify-content: center;
-}
-
-.action-sheet-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-}
-
-.action-sheet-panel {
-  position: relative;
-  width: 100%;
-  max-width: 480px;
-  background: var(--bg-modal);
-  border-top: 2px solid var(--border);
-  border-radius: 0;
-  padding: 12px 20px calc(20px + env(safe-area-inset-bottom, 0px));
-  box-shadow: 0 -4px 0 #1c1c1c;
-}
-
-.action-sheet-handle {
-  width: 36px;
-  height: 4px;
-  background: #1c1c1c;
-  margin: 0 auto 16px;
-}
-
-.action-sheet-filename {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-primary);
-  text-align: center;
-  margin-bottom: 20px;
-  white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
-  padding: 0 16px;
 }
 
-.action-sheet-actions {
+.notes-list-panel {
+  width: 40%;
+  min-width: 280px;
+  max-width: 400px;
+  overflow-y: auto;
+  border-right: 2px solid var(--border);
+  padding: 20px 20px 24px;
+}
+
+.notes-list-panel .notes-grid {
+  grid-template-columns: 1fr;
+}
+
+.note-editor {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  padding: 20px 24px 24px;
+  overflow: hidden;
+  gap: 12px;
 }
 
-.action-sheet-btn {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  width: 100%;
-  padding: 14px 16px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text-primary);
-  transition: var(--transition);
-  text-align: left;
-  min-height: 50px;
+/* Mobile: full-screen editor overlay */
+@media (max-width: 768px) {
+  .notes-split {
+    position: relative;
+  }
+
+  .notes-list-panel {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    border-right: none;
+  }
+
+  .note-editor {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: var(--bg-base);
+    padding: 16px;
+    border: none;
+  }
+
+  .note-editor-header {
+    padding-right: 0;
+  }
 }
 
-.action-sheet-btn:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--border-hover);
-}
-
-.action-sheet-btn-icon {
-  width: 24px;
+.note-close-btn {
+  padding: 6px !important;
+  min-width: 32px;
+  min-height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  opacity: 0.7;
 }
 
-.action-sheet-btn:hover .action-sheet-btn-icon { opacity: 1; }
-
-.action-sheet-btn-danger {
+.note-close-btn:hover {
   color: var(--error);
 }
 
-.action-sheet-btn-danger:hover {
-  background: var(--error-bg);
-  border-color: var(--error);
-}
-
-.action-sheet-cancel {
-  display: block;
-  width: 100%;
-  padding: 14px;
-  margin-top: 10px;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text-secondary);
-  text-align: center;
-  transition: var(--transition);
-  min-height: 50px;
-}
-
-.action-sheet-cancel:hover {
-  background: var(--bg-card-hover);
-  color: var(--text-primary);
-}
-
-/* Desktop: hide the bottom sheet entirely */
-@media (min-width: 769px) {
-  .action-sheet { display: none !important; }
-}
-
-/* Hide preview button when not applicable */
-.action-sheet-btn-preview.hidden { display: none; }
-
 /* ============================================================
-   32. Auth Screen
+   33. Auth Screen
    ============================================================ */
 .auth-screen {
   position: fixed;
@@ -2085,23 +2240,7 @@ body.sidebar-open .sidebar-backdrop {
 @media (max-width: 768px) {
   :root { --sidebar-width: 260px; }
 
-  /* Show hamburger */
-  .hamburger-btn { display: flex; }
-
-  /* Sidebar becomes fixed overlay */
-  .sidebar {
-    position: fixed;
-    top: 0;
-    left: -280px;
-    width: 280px;
-    height: 100vh;
-    z-index: 500;
-    transition: left 0.2s var(--ease);
-    background: var(--bg-sidebar);
-  }
-
   body.sidebar-open .sidebar {
-    left: 0;
     box-shadow: 8px 0 0 #1c1c1c;
   }
 
@@ -2129,6 +2268,16 @@ body.sidebar-open .sidebar-backdrop {
   /* Show FAB */
   .fab { display: flex; }
   .fab-menu { display: flex; }
+}
+
+/* Mobile: hide sidebar collapse button, center header */
+@media (max-width: 768px) {
+  .sidebar-collapse-btn {
+    display: none;
+  }
+  .sidebar-header {
+    justify-content: center;
+  }
 }
 
 /* ============================================================
@@ -2168,16 +2317,6 @@ body.sidebar-open .sidebar-backdrop {
   }
 
   .col-type { display: none; }
-
-  /* File actions: always visible on mobile (no hover) */
-  .file-card-actions {
-    opacity: 1;
-    transform: none;
-  }
-
-  .list-row .col-actions {
-    opacity: 1;
-  }
 
   /* Larger touch targets for action buttons */
   .action-btn {

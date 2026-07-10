@@ -72,9 +72,21 @@ const App = {
     // Wait for authentication before mounting the app
     await Auth.init();
 
+    // Sidebar: open by default on desktop, closed on mobile
+    if (window.innerWidth > 768) {
+      document.body.classList.add('sidebar-open');
+    }
+
+    // Default: collapse both sections on first visit
+    if (localStorage.getItem('sidebar-folders-collapsed') === null) {
+      localStorage.setItem('sidebar-folders-collapsed', 'true');
+    }
+    if (localStorage.getItem('sidebar-projects-collapsed') === null) {
+      localStorage.setItem('sidebar-projects-collapsed', 'true');
+    }
+
     this._initControls();
     Upload.init();
-    Gallery.initActionSheet();
     await Projects.load();
 
     await this.refresh();
@@ -123,17 +135,35 @@ const App = {
       Folders.showCreateModal();
     });
 
-    // Hamburger menu (mobile)
-    const hamburger = document.getElementById('hamburger-btn');
-    const hamburgerNotes = document.getElementById('hamburger-btn-notes');
-    const hamburgerTasks = document.getElementById('hamburger-btn-tasks');
+    // Sidebar collapse toggle
+    const collapseBtn = document.getElementById('sidebar-collapse-btn');
+    const expandTab = document.getElementById('sidebar-expand-tab');
     const backdrop = document.getElementById('sidebar-backdrop');
-    [hamburger, hamburgerNotes, hamburgerTasks].forEach((btn) => {
-      if (btn) btn.addEventListener('click', () => this.toggleSidebar());
+    if (collapseBtn) collapseBtn.addEventListener('click', () => this.toggleSidebar());
+    if (expandTab) expandTab.addEventListener('click', () => this.toggleSidebar());
+    if (backdrop) backdrop.addEventListener('click', () => this.closeSidebar());
+
+    // Collapsible sidebar sections
+    document.querySelectorAll('.sidebar-section-toggle').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const group = btn.closest('.sidebar-section-group');
+        const section = btn.dataset.section;
+        group.classList.toggle('collapsed');
+        btn.setAttribute('aria-expanded', !group.classList.contains('collapsed'));
+        localStorage.setItem(`sidebar-${section}-collapsed`, group.classList.contains('collapsed'));
+      });
     });
-    if (backdrop) {
-      backdrop.addEventListener('click', () => this.closeSidebar());
-    }
+
+    // Restore section collapse state from localStorage
+    ['folders', 'projects'].forEach((section) => {
+      const collapsed = localStorage.getItem(`sidebar-${section}-collapsed`) === 'true';
+      const group = document.getElementById(`${section}-section`);
+      if (group && collapsed) {
+        group.classList.add('collapsed');
+        const toggle = group.querySelector('.sidebar-section-toggle');
+        if (toggle) toggle.setAttribute('aria-expanded', 'false');
+      }
+    });
 
     // FAB menu toggle (mobile)
     const fabBtn = document.getElementById('fab-btn');
@@ -163,10 +193,7 @@ const App = {
         fabMenu.classList.remove('open');
         fabBtn.classList.remove('active');
         this.navigateToView('tasks');
-        setTimeout(() => {
-          const input = document.getElementById('task-input');
-          if (input) input.focus();
-        }, 100);
+        setTimeout(() => Tasks.showCreateModal(), 100);
       });
 
       // Close menu when clicking outside
@@ -192,6 +219,12 @@ const App = {
     const newNoteBtn = document.getElementById('new-note-btn');
     if (newNoteBtn) {
       newNoteBtn.addEventListener('click', () => Notes.createNote());
+    }
+
+    // New task button
+    const newTaskBtn = document.getElementById('new-task-btn');
+    if (newTaskBtn) {
+      newTaskBtn.addEventListener('click', () => Tasks.showCreateModal());
     }
   },
 
@@ -282,16 +315,11 @@ const App = {
     });
 
     const isFiles = view === 'files';
-    const isTasks = view === 'tasks';
 
     // Toggle main view containers
     document.getElementById('files-view-wrapper').classList.toggle('hidden', !isFiles);
     document.getElementById('notes-view').classList.toggle('hidden', view !== 'notes');
     document.getElementById('tasks-view').classList.toggle('hidden', view !== 'tasks');
-
-    // Toggle context panels in sidebar
-    document.getElementById('ctx-files').classList.toggle('hidden', !isFiles);
-    document.getElementById('ctx-tasks').classList.toggle('hidden', !isTasks);
 
     this.closeSidebar();
 
@@ -309,7 +337,9 @@ const App = {
   },
 
   closeSidebar() {
-    document.body.classList.remove('sidebar-open');
+    if (window.innerWidth <= 768) {
+      document.body.classList.remove('sidebar-open');
+    }
   },
 
   /* ------------------------------------------------------------------ */
@@ -317,7 +347,13 @@ const App = {
   /* ------------------------------------------------------------------ */
 
   async deleteFile(file) {
-    if (!confirm(`Delete "${file.filename}"? This cannot be undone.`)) return;
+    const confirmed = await Confirm.show({
+      title: 'Delete File?',
+      description: `Delete "${file.filename}"? This cannot be undone.`,
+      confirmText: 'Delete',
+      type: 'danger',
+    });
+    if (!confirmed) return;
     try {
       await Promise.all([
         Storage.deleteFile(file.storage_path),
@@ -372,7 +408,13 @@ const App = {
   },
 
   async deleteFolder(name) {
-    if (!confirm(`Delete folder "${name}"? Files inside will be moved to All Files.`)) return;
+    const confirmed = await Confirm.show({
+      title: 'Delete Folder?',
+      description: `Delete folder "${name}"? Files inside will be moved to All Files.`,
+      confirmText: 'Delete',
+      type: 'danger',
+    });
+    if (!confirmed) return;
     try {
       await DB.deleteFolder(name);
       if (this.state.currentFolder === name) this.state.currentFolder = 'root';
