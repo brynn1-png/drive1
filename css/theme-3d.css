@@ -41,11 +41,13 @@ html.theme-3d {
 
   /* Lime was the brand's bright highlight color (upload button, storage
      bar, pin/active highlights, the toggle switch's "on" state, focus
-     outlines) — swapped for a bright sky-blue so no green survives the
-     switch to 3D. Kept light enough that the black text/icons that sit
-     on top of it (.upload-btn, .fab) stay readable. */
-  --lime:            #7dd3fc;
-  --lime-hover:      #38bdf8;
+     outlines). It needs to stay light enough for the black text/icons
+     that sit on top of it (.upload-btn, .fab), so it can't just equal
+     --accent — instead it reuses the same blue family as --accent
+     (a lighter tint of it) so the two read as one cohesive palette
+     instead of two unrelated blues fighting each other. */
+  --lime:            #60a5fa;
+  --lime-hover:      #3b82f6;
 
   --transition:      all 0.3s var(--ease);
   --transition-slow: all 0.4s var(--ease);
@@ -93,12 +95,17 @@ html.theme-3d #sort-select:focus {
   box-shadow: 0 0 0 4px var(--accent-glow);
 }
 
+html.theme-3d .auth-card {
+  box-shadow: 0 24px 60px -16px rgba(0, 0, 0, 0.5), 0 0 60px -20px var(--accent-glow);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
 html.theme-3d .lightbox img {
   box-shadow: var(--shadow-modal);
 }
 
 html.theme-3d .note-card-pin:hover {
-  background: rgba(56, 189, 248, 0.15);
+  background: rgba(59, 130, 246, 0.15);
 }
 
 /* Press states — a gentle scale-down instead of the brutalist

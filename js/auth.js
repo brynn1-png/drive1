@@ -213,6 +213,7 @@ const Auth = {
     const toggleText = document.getElementById('auth-toggle-label');
     const toggleBtn = document.getElementById('auth-toggle-btn');
     const title = document.getElementById('auth-title');
+    const desc = document.getElementById('auth-desc');
     const errorEl = document.getElementById('auth-error');
     const forgotLink = document.getElementById('auth-forgot-link');
     const passwordHint = document.getElementById('auth-password-hint');
@@ -224,6 +225,7 @@ const Auth = {
       if (toggleText) toggleText.textContent = "Don't have an account?";
       if (toggleBtn) toggleBtn.textContent = 'Sign Up';
       if (title) title.textContent = 'Welcome back';
+      if (desc) desc.textContent = 'Sign in to access your personal drive';
       if (forgotLink) forgotLink.classList.remove('hidden');
       if (passwordHint) passwordHint.classList.add('hidden');
     } else {
@@ -231,6 +233,7 @@ const Auth = {
       if (toggleText) toggleText.textContent = 'Already have an account?';
       if (toggleBtn) toggleBtn.textContent = 'Sign In';
       if (title) title.textContent = 'Create your account';
+      if (desc) desc.textContent = 'Sign up to get your own personal drive';
       if (forgotLink) forgotLink.classList.add('hidden');
       if (passwordHint) passwordHint.classList.remove('hidden');
     }

@@ -62,21 +62,31 @@
        ============================================================ -->
   <div id="auth-screen" class="auth-screen" role="dialog" aria-modal="true" aria-labelledby="auth-title">
     <div class="auth-card">
-      <div class="auth-logo">MyDrive</div>
-      <p class="auth-tagline">Store files, capture notes, and track tasks — all in one place.</p>
-      <h2 class="auth-title" id="auth-title">Welcome back</h2>
-      <p class="auth-desc">Sign in to access your personal drive</p>
-      <div id="auth-error" class="auth-error hidden"></div>
-      <input type="email" id="auth-email" class="auth-input" placeholder="Email" autocomplete="email" spellcheck="false" />
-      <div class="auth-password-wrap">
-        <input type="password" id="auth-password" class="auth-input" placeholder="Password" autocomplete="current-password" />
-        <button type="button" class="auth-password-toggle" id="auth-password-toggle" aria-label="Show password">
-          <svg class="icon-eye" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          <svg class="icon-eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.86 21.86 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.82 21.82 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-        </button>
+      <div class="auth-header">
+        <div class="auth-logo">
+          <span class="auth-logo-mark" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          </span>
+          MyDrive
+        </div>
       </div>
-      <p class="auth-field-hint hidden" id="auth-password-hint">At least 6 characters</p>
-      <button type="button" class="auth-forgot-link" id="auth-forgot-link">Forgot password?</button>
+      <div class="auth-heading">
+        <h2 class="auth-title" id="auth-title">Welcome back</h2>
+        <p class="auth-desc" id="auth-desc">Sign in to access your personal drive</p>
+      </div>
+      <div id="auth-error" class="auth-error hidden"></div>
+      <div class="auth-fields">
+        <input type="email" id="auth-email" class="auth-input" placeholder="Email" autocomplete="email" spellcheck="false" />
+        <div class="auth-password-wrap">
+          <input type="password" id="auth-password" class="auth-input" placeholder="Password" autocomplete="current-password" />
+          <button type="button" class="auth-password-toggle" id="auth-password-toggle" aria-label="Show password">
+            <svg class="icon-eye" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="icon-eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.86 21.86 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.82 21.82 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+        <p class="auth-field-hint hidden" id="auth-password-hint">At least 6 characters</p>
+        <button type="button" class="auth-forgot-link" id="auth-forgot-link">Forgot password?</button>
+      </div>
       <button class="btn btn-primary auth-submit" id="auth-submit">Sign In</button>
       <p class="auth-toggle-text">
         <span id="auth-toggle-label">Don't have an account?</span>
@@ -85,11 +95,17 @@
     </div>
 
     <div class="auth-card hidden" id="auth-reset-request-card">
-      <div class="auth-logo">MyDrive</div>
-      <h2 class="auth-title">Reset your password</h2>
-      <p class="auth-desc">Enter your email and we'll send you a reset link</p>
+      <div class="auth-header">
+        <div class="auth-logo">MyDrive</div>
+      </div>
+      <div class="auth-heading">
+        <h2 class="auth-title">Reset your password</h2>
+        <p class="auth-desc">Enter your email and we'll send you a reset link</p>
+      </div>
       <div id="auth-reset-error" class="auth-error hidden"></div>
-      <input type="email" id="auth-reset-email" class="auth-input" placeholder="Email" autocomplete="email" spellcheck="false" />
+      <div class="auth-fields">
+        <input type="email" id="auth-reset-email" class="auth-input" placeholder="Email" autocomplete="email" spellcheck="false" />
+      </div>
       <button class="btn btn-primary auth-submit" id="auth-reset-submit">Send Reset Link</button>
       <p class="auth-toggle-text">
         <button class="auth-toggle-btn" id="auth-reset-back-link">Back to Sign In</button>
@@ -97,25 +113,31 @@
     </div>
 
     <div class="auth-card hidden" id="auth-reset-confirm-card">
-      <div class="auth-logo">MyDrive</div>
-      <h2 class="auth-title">Set a new password</h2>
-      <p class="auth-desc">Choose a new password for your account</p>
+      <div class="auth-header">
+        <div class="auth-logo">MyDrive</div>
+      </div>
+      <div class="auth-heading">
+        <h2 class="auth-title">Set a new password</h2>
+        <p class="auth-desc">Choose a new password for your account</p>
+      </div>
       <div id="auth-reset-confirm-error" class="auth-error hidden"></div>
-      <div class="auth-password-wrap">
-        <input type="password" id="auth-new-password" class="auth-input" placeholder="New password" autocomplete="new-password" />
-        <button type="button" class="auth-password-toggle" id="auth-new-password-toggle" aria-label="Show password">
-          <svg class="icon-eye" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          <svg class="icon-eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.86 21.86 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.82 21.82 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-        </button>
+      <div class="auth-fields">
+        <div class="auth-password-wrap">
+          <input type="password" id="auth-new-password" class="auth-input" placeholder="New password" autocomplete="new-password" />
+          <button type="button" class="auth-password-toggle" id="auth-new-password-toggle" aria-label="Show password">
+            <svg class="icon-eye" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="icon-eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.86 21.86 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.82 21.82 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+        <div class="auth-password-wrap">
+          <input type="password" id="auth-new-password-confirm" class="auth-input" placeholder="Confirm new password" autocomplete="new-password" />
+          <button type="button" class="auth-password-toggle" id="auth-new-password-confirm-toggle" aria-label="Show password">
+            <svg class="icon-eye" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="icon-eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.86 21.86 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.82 21.82 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+        <p class="auth-field-hint">At least 6 characters</p>
       </div>
-      <div class="auth-password-wrap">
-        <input type="password" id="auth-new-password-confirm" class="auth-input" placeholder="Confirm new password" autocomplete="new-password" />
-        <button type="button" class="auth-password-toggle" id="auth-new-password-confirm-toggle" aria-label="Show password">
-          <svg class="icon-eye" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          <svg class="icon-eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.86 21.86 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.82 21.82 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-        </button>
-      </div>
-      <p class="auth-field-hint">At least 6 characters</p>
       <button class="btn btn-primary auth-submit" id="auth-reset-confirm-submit">Update Password</button>
     </div>
   </div>
