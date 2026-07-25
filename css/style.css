@@ -2410,6 +2410,32 @@ body.sidebar-open .sidebar {
 #auth-screen .auth-field-hint { color: rgba(255, 255, 255, 0.4); }
 .settings-form .auth-field-hint { color: var(--text-muted); }
 
+/* .auth-input / .auth-password-toggle are shared between the dark auth
+   screen and Settings' light "Change Password" card — the dark-context
+   white-on-translucent-white styling is invisible on a light card. */
+.settings-form .auth-input {
+  background: #ffffff;
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+.settings-form .auth-input::placeholder {
+  color: var(--text-muted);
+}
+
+.settings-form .auth-input:focus {
+  border-color: var(--accent);
+  background: var(--bg-input-focus);
+}
+
+.settings-form .auth-password-toggle {
+  color: var(--text-muted);
+}
+
+.settings-form .auth-password-toggle:hover {
+  color: var(--accent);
+}
+
 .auth-submit {
   width: 100%;
   justify-content: center;
