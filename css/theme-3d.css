@@ -1,0 +1,187 @@
+/* ============================================================
+   3D Depth Theme — override layer
+   Scoped entirely under html.theme-3d, applied additively on
+   top of style.css. Toggled via #theme-toggle-checkbox (app.js),
+   persisted to localStorage under the "ui-theme" key.
+   ============================================================ */
+
+html.theme-3d {
+  --radius-xs: 8px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --radius-full: 999px;
+
+  --shadow-card:     0 10px 24px -8px rgba(15, 30, 66, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  --shadow-modal:    0 24px 48px -12px rgba(15, 30, 66, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  --shadow-accent:   0 6px 16px -4px rgba(15, 30, 66, 0.28);
+  --shadow-sm:       0 3px 8px -2px rgba(15, 30, 66, 0.2);
+
+  --border:          rgba(15, 30, 66, 0.08);
+  --border-hover:    rgba(15, 30, 66, 0.18);
+  --border-accent:   rgba(15, 30, 66, 0.18);
+
+  /* Cooler, softer surfaces instead of the flat brutalist white/black,
+     plus a blue accent that pairs with the existing lime brand color
+     instead of the old flat charcoal. */
+  --bg-base:         #eef2f8;
+  --bg-surface:      #fbfcff;
+  --bg-card:         linear-gradient(150deg, #ffffff, #eef2fa);
+  --bg-card-hover:   linear-gradient(150deg, #ffffff, #e6ecf9);
+  --bg-input:        #ffffff;
+  --bg-input-focus:  #eaf1ff;
+  --bg-modal:        linear-gradient(160deg, #ffffff, #f3f5fb);
+  --bg-sidebar:      linear-gradient(180deg, #14203f, #0a0f1e);
+
+  --accent:          #2563eb;
+  --accent-light:    #60a5fa;
+  --accent-dark:     #1d4ed8;
+  --accent-glow:     rgba(37, 99, 235, 0.35);
+
+  /* Lime was the brand's bright highlight color (upload button, storage
+     bar, pin/active highlights, the toggle switch's "on" state, focus
+     outlines) — swapped for a bright sky-blue so no green survives the
+     switch to 3D. Kept light enough that the black text/icons that sit
+     on top of it (.upload-btn, .fab) stay readable. */
+  --lime:            #7dd3fc;
+  --lime-hover:      #38bdf8;
+
+  --transition:      all 0.3s var(--ease);
+  --transition-slow: all 0.4s var(--ease);
+}
+
+/* Rounded, friendly sans instead of the brutalist theme's monospace —
+   the sharp-edged Space Mono clashed with the soft/elevated 3D look. */
+html.theme-3d body,
+html.theme-3d .note-textarea {
+  font-family: 'Poppins', 'Segoe UI', sans-serif;
+}
+
+/* ------------------------------------------------------------
+   Soft elevation on hover/active instead of the hard "pressed"
+   offset used by the base brutalist theme.
+   ------------------------------------------------------------ */
+html.theme-3d .upload-btn:hover,
+html.theme-3d .new-folder-btn:hover,
+html.theme-3d .btn-ghost:hover,
+html.theme-3d .btn-danger:hover,
+html.theme-3d .note-card:hover,
+html.theme-3d .task-row:hover,
+html.theme-3d .fab:hover,
+html.theme-3d .fab-menu-item:hover,
+html.theme-3d .lightbox-close:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-accent);
+}
+
+html.theme-3d .btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-accent), 0 0 0 4px var(--accent-glow);
+}
+
+html.theme-3d .folder-item.active,
+html.theme-3d .nav-item.active,
+html.theme-3d .fab.active,
+html.theme-3d .btn-danger {
+  box-shadow: var(--shadow-accent);
+}
+
+html.theme-3d .auth-input:focus,
+html.theme-3d .search-input:focus,
+html.theme-3d #sort-select:focus {
+  box-shadow: 0 0 0 4px var(--accent-glow);
+}
+
+html.theme-3d .lightbox img {
+  box-shadow: var(--shadow-modal);
+}
+
+html.theme-3d .note-card-pin:hover {
+  background: rgba(56, 189, 248, 0.15);
+}
+
+/* Press states — a gentle scale-down instead of the brutalist
+   "shove into the corner, drop the shadow" mechanic. */
+html.theme-3d .upload-btn:active,
+html.theme-3d .btn-primary:active,
+html.theme-3d .btn-danger:active,
+html.theme-3d .fab:active {
+  transform: scale(0.97);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ------------------------------------------------------------
+   File cards — hover lift + subtle perspective tilt
+   ------------------------------------------------------------ */
+html.theme-3d .file-card {
+  transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+}
+
+html.theme-3d .file-card:hover {
+  transform: perspective(800px) rotateX(3deg) rotateY(-3deg) translateY(-6px) scale(1.02);
+  box-shadow: 0 20px 40px -12px rgba(15, 30, 66, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* ------------------------------------------------------------
+   Sidebar — layered depth shadow
+   ------------------------------------------------------------ */
+html.theme-3d .sidebar {
+  box-shadow: 8px 0 24px rgba(10, 15, 30, 0.35);
+}
+
+html.theme-3d body.sidebar-open .sidebar {
+  box-shadow: 8px 0 24px rgba(10, 15, 30, 0.5);
+}
+
+/* ------------------------------------------------------------
+   Scrollbar — rounded, semi-transparent, accent-colored on hover,
+   instead of the base theme's square flat #1c1c1c thumb.
+   ------------------------------------------------------------ */
+html.theme-3d {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(15, 30, 66, 0.3) transparent;
+}
+
+html.theme-3d ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html.theme-3d ::-webkit-scrollbar-thumb {
+  background: rgba(15, 30, 66, 0.25);
+  border-radius: 999px;
+}
+
+html.theme-3d ::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* ------------------------------------------------------------
+   Modals — soft elevated pop-in
+   ------------------------------------------------------------ */
+html.theme-3d .modal-card {
+  animation: modal3DPop 0.25s var(--ease);
+}
+
+@keyframes modal3DPop {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ------------------------------------------------------------
+   Settings — card hover lift, consistent with note-card/task-row
+   ------------------------------------------------------------ */
+html.theme-3d .settings-section {
+  transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+}
+
+html.theme-3d .settings-section:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px -10px rgba(15, 30, 66, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}

@@ -9,6 +9,9 @@ const Upload = {
   /** Queue of files waiting to be uploaded (used for sequential upload) */
   _queue: [],
   _isUploading: false,
+  /** Batch counters, for the "X of Y files" progress indicator */
+  _batchTotal: 0,
+  _batchDone: 0,
 
   /* ------------------------------------------------------------------ */
   /*  Initialization                                                      */
@@ -62,18 +65,23 @@ const Upload = {
 
   _enqueue(files) {
     this._queue.push(...files);
+    this._batchTotal += files.length;
     if (!this._isUploading) this._processQueue();
   },
 
   async _processQueue() {
     if (this._queue.length === 0) {
       this._isUploading = false;
+      this._batchTotal = 0;
+      this._batchDone = 0;
+      this._hideProgress();
       return;
     }
 
     this._isUploading = true;
     const file = this._queue.shift();
     await this._uploadOne(file);
+    this._batchDone++;
     this._processQueue(); // process next
   },
 
@@ -116,10 +124,12 @@ const Upload = {
 
     } catch (err) {
       console.error(err);
-      Toast.show(`Failed to upload "${file.name}": ${err.message}`, 'error');
-    } finally {
-      this._hideProgress();
+      Toast.show(`Failed to upload "${file.name}": ${friendlyError(err)}`, 'error');
     }
+    // Progress overlay is hidden by _processQueue() once the whole batch
+    // drains — hiding it per-file here would race with the next file's
+    // _showProgress() call and make batch uploads look like they're
+    // resetting/looping.
   },
 
   /* ------------------------------------------------------------------ */
@@ -129,12 +139,21 @@ const Upload = {
   _showProgress(filename, percent) {
     const overlay    = document.getElementById('upload-overlay');
     const nameEl     = document.getElementById('upload-filename');
+    const countEl    = document.getElementById('upload-count');
     const percentEl  = document.getElementById('upload-percent');
     const bar        = document.getElementById('progress-bar');
 
     nameEl.textContent = filename.length > 40
       ? filename.slice(0, 37) + '...'
       : filename;
+
+    if (this._batchTotal > 1) {
+      countEl.textContent = `File ${this._batchDone + 1} of ${this._batchTotal}`;
+      countEl.classList.remove('hidden');
+    } else {
+      countEl.classList.add('hidden');
+    }
+
     percentEl.textContent = `${percent}%`;
     bar.style.width = `${percent}%`;
     overlay.classList.remove('hidden');

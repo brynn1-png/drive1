@@ -252,9 +252,10 @@ const DB = {
     return data || [];
   },
 
-  async insertTask(title, projectId = null) {
+  async insertTask(title, projectId = null, dueDate = null) {
     const row = { title, user_id: this._uid() };
     if (projectId) row.project_id = projectId;
+    if (dueDate) row.due_date = dueDate;
 
     const { data, error } = await supabaseClient
       .from('tasks')

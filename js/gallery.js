@@ -227,7 +227,7 @@ const Gallery = {
       setTimeout(() => URL.revokeObjectURL(blobUrl), 10_000);
     } catch (err) {
       console.error('Download failed:', err);
-      Toast.show(`Failed to download "${filename}": ${err.message}`, 'error');
+      Toast.show(`Failed to download "${filename}": ${friendlyError(err)}`, 'error');
     }
   },
 

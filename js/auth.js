@@ -38,6 +38,11 @@ const Auth = {
           this._session = null;
           window.location.reload();
         }
+        if (event === 'PASSWORD_RECOVERY' && session) {
+          this._session = session;
+          this._user = session.user;
+          this._showResetConfirmScreen();
+        }
       });
     });
   },
@@ -67,6 +72,17 @@ const Auth = {
     if (error) throw error;
   },
 
+  async sendResetEmail(email) {
+    const redirectTo = window.location.origin + window.location.pathname;
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo });
+    if (error) throw error;
+  },
+
+  async updatePassword(newPassword) {
+    const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+    if (error) throw error;
+  },
+
   showLoginScreen() {
     document.getElementById('auth-screen').classList.remove('hidden');
   },
@@ -87,6 +103,16 @@ const Auth = {
     const toggleBtn = document.getElementById('auth-toggle-btn');
     const passwordInput = document.getElementById('auth-password');
     const logoutBtn = document.getElementById('logout-btn');
+    const forgotLink = document.getElementById('auth-forgot-link');
+    const resetBackLink = document.getElementById('auth-reset-back-link');
+    const resetSubmitBtn = document.getElementById('auth-reset-submit');
+    const resetEmailInput = document.getElementById('auth-reset-email');
+    const resetConfirmSubmitBtn = document.getElementById('auth-reset-confirm-submit');
+    const newPasswordInput = document.getElementById('auth-new-password');
+    const newPasswordConfirmInput = document.getElementById('auth-new-password-confirm');
+    const settingsChangePasswordBtn = document.getElementById('settings-change-password-submit');
+    const settingsNewPasswordInput = document.getElementById('settings-new-password');
+    const settingsNewPasswordConfirmInput = document.getElementById('settings-new-password-confirm');
 
     if (submitBtn) {
       submitBtn.addEventListener('click', () => this._handleSubmit());
@@ -106,12 +132,78 @@ const Auth = {
       logoutBtn.addEventListener('click', () => this._showSignOutModal());
     }
 
+    const settingsLogoutBtn = document.getElementById('settings-logout-btn');
+    if (settingsLogoutBtn) {
+      settingsLogoutBtn.addEventListener('click', () => this._showSignOutModal());
+    }
+
+    if (forgotLink) {
+      forgotLink.addEventListener('click', () => this.showResetRequest());
+    }
+
+    if (resetBackLink) {
+      resetBackLink.addEventListener('click', () => this.showSignInFromReset());
+    }
+
+    if (resetSubmitBtn) {
+      resetSubmitBtn.addEventListener('click', () => this._handleResetRequestSubmit());
+    }
+
+    if (resetEmailInput) {
+      resetEmailInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') this._handleResetRequestSubmit();
+      });
+    }
+
+    if (resetConfirmSubmitBtn) {
+      resetConfirmSubmitBtn.addEventListener('click', () => this._handleResetConfirmSubmit());
+    }
+
+    [newPasswordInput, newPasswordConfirmInput].forEach((input) => {
+      if (input) {
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') this._handleResetConfirmSubmit();
+        });
+      }
+    });
+
+    if (settingsChangePasswordBtn) {
+      settingsChangePasswordBtn.addEventListener('click', () => this._handleChangePasswordSubmit());
+    }
+
+    [settingsNewPasswordInput, settingsNewPasswordConfirmInput].forEach((input) => {
+      if (input) {
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') this._handleChangePasswordSubmit();
+        });
+      }
+    });
+
+    this._wirePasswordToggle('auth-password-toggle', 'auth-password');
+    this._wirePasswordToggle('auth-new-password-toggle', 'auth-new-password');
+    this._wirePasswordToggle('auth-new-password-confirm-toggle', 'auth-new-password-confirm');
+    this._wirePasswordToggle('settings-new-password-toggle', 'settings-new-password');
+    this._wirePasswordToggle('settings-new-password-confirm-toggle', 'settings-new-password-confirm');
+
     // Sign-up success modal
     const signupOk = document.getElementById('signup-success-ok');
     if (signupOk) signupOk.addEventListener('click', () => {
       this._hideModal('signup-success-modal');
       this._mode = 'signin';
       this._toggleMode();
+    });
+  },
+
+  _wirePasswordToggle(toggleBtnId, inputId) {
+    const btn = document.getElementById(toggleBtnId);
+    const input = document.getElementById(inputId);
+    if (!btn || !input) return;
+
+    btn.addEventListener('click', () => {
+      const showing = input.type === 'text';
+      input.type = showing ? 'password' : 'text';
+      btn.classList.toggle('is-visible', !showing);
+      btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
     });
   },
 
@@ -122,6 +214,8 @@ const Auth = {
     const toggleBtn = document.getElementById('auth-toggle-btn');
     const title = document.getElementById('auth-title');
     const errorEl = document.getElementById('auth-error');
+    const forgotLink = document.getElementById('auth-forgot-link');
+    const passwordHint = document.getElementById('auth-password-hint');
 
     if (errorEl) errorEl.classList.add('hidden');
 
@@ -130,11 +224,15 @@ const Auth = {
       if (toggleText) toggleText.textContent = "Don't have an account?";
       if (toggleBtn) toggleBtn.textContent = 'Sign Up';
       if (title) title.textContent = 'Welcome back';
+      if (forgotLink) forgotLink.classList.remove('hidden');
+      if (passwordHint) passwordHint.classList.add('hidden');
     } else {
       if (submitBtn) submitBtn.textContent = 'Create Account';
       if (toggleText) toggleText.textContent = 'Already have an account?';
       if (toggleBtn) toggleBtn.textContent = 'Sign In';
       if (title) title.textContent = 'Create your account';
+      if (forgotLink) forgotLink.classList.add('hidden');
+      if (passwordHint) passwordHint.classList.remove('hidden');
     }
   },
 
@@ -172,18 +270,137 @@ const Auth = {
         }
       }
     } catch (err) {
-      this._showError(err.message);
+      this._showError(friendlyError(err));
       submitBtn.disabled = false;
       submitBtn.textContent = this._mode === 'signin' ? 'Sign In' : 'Create Account';
     }
   },
 
-  _showError(msg, type = 'error') {
-    const errorEl = document.getElementById('auth-error');
+  _showError(msg, type = 'error', elId = 'auth-error') {
+    const errorEl = document.getElementById(elId);
     if (!errorEl) return;
     errorEl.textContent = msg;
     errorEl.className = `auth-error ${type}`;
     errorEl.classList.remove('hidden');
+  },
+
+  showResetRequest() {
+    document.querySelector('.auth-card:not(.hidden)')?.classList.add('hidden');
+    document.getElementById('auth-reset-request-card').classList.remove('hidden');
+    document.getElementById('auth-reset-error').classList.add('hidden');
+    document.getElementById('auth-reset-email').value = '';
+  },
+
+  showSignInFromReset() {
+    document.getElementById('auth-reset-request-card').classList.add('hidden');
+    document.querySelector('#auth-screen .auth-card').classList.remove('hidden');
+  },
+
+  _showResetConfirmScreen() {
+    document.querySelectorAll('#auth-screen .auth-card').forEach((card) => {
+      if (card.id !== 'auth-reset-confirm-card') card.classList.add('hidden');
+    });
+    document.getElementById('auth-reset-confirm-card').classList.remove('hidden');
+    this.showLoginScreen();
+  },
+
+  async _handleResetRequestSubmit() {
+    const email = document.getElementById('auth-reset-email').value.trim();
+    const submitBtn = document.getElementById('auth-reset-submit');
+
+    document.getElementById('auth-reset-error').classList.add('hidden');
+
+    if (!email) {
+      this._showError('Please enter your email.', 'error', 'auth-reset-error');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+
+    try {
+      await this.sendResetEmail(email);
+      this._showError('Check your email for a reset link.', 'success', 'auth-reset-error');
+    } catch (err) {
+      this._showError(friendlyError(err), 'error', 'auth-reset-error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Send Reset Link';
+    }
+  },
+
+  async _handleResetConfirmSubmit() {
+    const password = document.getElementById('auth-new-password').value;
+    const confirmPassword = document.getElementById('auth-new-password-confirm').value;
+    const submitBtn = document.getElementById('auth-reset-confirm-submit');
+
+    document.getElementById('auth-reset-confirm-error').classList.add('hidden');
+
+    if (!password || !confirmPassword) {
+      this._showError('Please fill in both fields.', 'error', 'auth-reset-confirm-error');
+      return;
+    }
+
+    if (password.length < 6) {
+      this._showError('Password must be at least 6 characters.', 'error', 'auth-reset-confirm-error');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      this._showError('Passwords do not match.', 'error', 'auth-reset-confirm-error');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Updating...';
+
+    try {
+      await this.updatePassword(password);
+      this._showError('Password updated. Redirecting...', 'success', 'auth-reset-confirm-error');
+      setTimeout(() => window.location.reload(), 1200);
+    } catch (err) {
+      this._showError(friendlyError(err), 'error', 'auth-reset-confirm-error');
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Update Password';
+    }
+  },
+
+  async _handleChangePasswordSubmit() {
+    const password = document.getElementById('settings-new-password').value;
+    const confirmPassword = document.getElementById('settings-new-password-confirm').value;
+    const submitBtn = document.getElementById('settings-change-password-submit');
+
+    document.getElementById('settings-password-error').classList.add('hidden');
+
+    if (!password || !confirmPassword) {
+      this._showError('Please fill in both fields.', 'error', 'settings-password-error');
+      return;
+    }
+
+    if (password.length < 6) {
+      this._showError('Password must be at least 6 characters.', 'error', 'settings-password-error');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      this._showError('Passwords do not match.', 'error', 'settings-password-error');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Updating...';
+
+    try {
+      await this.updatePassword(password);
+      this._showError('Password updated.', 'success', 'settings-password-error');
+      document.getElementById('settings-new-password').value = '';
+      document.getElementById('settings-new-password-confirm').value = '';
+    } catch (err) {
+      this._showError(friendlyError(err), 'error', 'settings-password-error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Update Password';
+    }
   },
 
   _showModal(id) {

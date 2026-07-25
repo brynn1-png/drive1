@@ -36,12 +36,40 @@ const Toast = {
 };
 
 /* ------------------------------------------------------------------ */
+/*  Friendly error messages                                             */
+/*  Maps common raw Supabase/network error text to plain-English copy,  */
+/*  falling back to the original message for anything unrecognized.     */
+/* ------------------------------------------------------------------ */
+function friendlyError(err) {
+  const raw = (err && err.message) || String(err || '');
+  const msg = raw.toLowerCase();
+
+  if (msg.includes('invalid login credentials')) {
+    return 'Incorrect email or password.';
+  }
+  if (msg.includes('already registered') || msg.includes('duplicate key value') || msg.includes('already exists')) {
+    return 'That name or email is already in use.';
+  }
+  if (msg.includes('failed to fetch') || msg.includes('networkerror') || msg.includes('network request failed')) {
+    return 'Network error — check your connection and try again.';
+  }
+  if (msg.includes('row-level security') || msg.includes('permission denied')) {
+    return "You don't have permission to do that.";
+  }
+  if (msg.includes('jwt') || msg.includes('session') || msg.includes('not authenticated')) {
+    return 'Your session expired — please sign in again.';
+  }
+
+  return raw;
+}
+
+/* ------------------------------------------------------------------ */
 /*  Application state + coordinator                                     */
 /* ------------------------------------------------------------------ */
 const App = {
   state: {
     currentFolder: 'root',
-    currentView:   'files', // 'files' | 'notes' | 'tasks'
+    currentView:   'files', // 'files' | 'notes' | 'tasks' | 'settings'
     searchQuery:   '',
     sortBy:        'created_at',
     sortOrder:     'desc',
@@ -77,12 +105,13 @@ const App = {
       document.body.classList.add('sidebar-open');
     }
 
-    // Default: collapse both sections on first visit
+    // Default: expand both sections on first visit, so their "New X"
+    // buttons are visible without needing to discover the chevron toggle.
     if (localStorage.getItem('sidebar-folders-collapsed') === null) {
-      localStorage.setItem('sidebar-folders-collapsed', 'true');
+      localStorage.setItem('sidebar-folders-collapsed', 'false');
     }
     if (localStorage.getItem('sidebar-projects-collapsed') === null) {
-      localStorage.setItem('sidebar-projects-collapsed', 'true');
+      localStorage.setItem('sidebar-projects-collapsed', 'false');
     }
 
     this._initControls();
@@ -135,6 +164,11 @@ const App = {
       Folders.showCreateModal();
     });
 
+    // New project button
+    document.getElementById('new-project-btn').addEventListener('click', () => {
+      Projects.showCreateModal();
+    });
+
     // Sidebar collapse toggle
     const collapseBtn = document.getElementById('sidebar-collapse-btn');
     const expandTab = document.getElementById('sidebar-expand-tab');
@@ -165,6 +199,17 @@ const App = {
       }
     });
 
+    // 3D theme toggle
+    const themeToggle = document.getElementById('theme-toggle-checkbox');
+    if (themeToggle) {
+      themeToggle.checked = document.documentElement.classList.contains('theme-3d');
+      themeToggle.addEventListener('change', () => {
+        const enabled = themeToggle.checked;
+        document.documentElement.classList.toggle('theme-3d', enabled);
+        localStorage.setItem('ui-theme', enabled ? '3d' : 'classic');
+      });
+    }
+
     // FAB menu toggle (mobile)
     const fabBtn = document.getElementById('fab-btn');
     const fabMenu = document.getElementById('fab-menu');
@@ -180,6 +225,20 @@ const App = {
         fabBtn.classList.remove('active');
         this.navigateToView('files');
         document.getElementById('file-input').click();
+      });
+
+      document.getElementById('fab-new-folder').addEventListener('click', () => {
+        fabMenu.classList.remove('open');
+        fabBtn.classList.remove('active');
+        this.navigateToView('files');
+        Folders.showCreateModal();
+      });
+
+      document.getElementById('fab-new-project').addEventListener('click', () => {
+        fabMenu.classList.remove('open');
+        fabBtn.classList.remove('active');
+        this.navigateToView('tasks');
+        Projects.showCreateModal();
       });
 
       document.getElementById('fab-new-note').addEventListener('click', () => {
@@ -214,6 +273,12 @@ const App = {
     document.querySelectorAll('#app-nav .nav-item').forEach((btn) => {
       btn.addEventListener('click', () => this.navigateToView(btn.dataset.view));
     });
+
+    // User info in the sidebar footer doubles as the entry point into Settings
+    const userInfoBtn = document.getElementById('user-info');
+    if (userInfoBtn) {
+      userInfoBtn.addEventListener('click', () => this.navigateToView('settings'));
+    }
 
     // New note button
     const newNoteBtn = document.getElementById('new-note-btn');
@@ -288,6 +353,11 @@ const App = {
 
       document.getElementById('storage-bar').style.width  = `${pct}%`;
       document.getElementById('storage-text').textContent = `${usedMB} MB / 1 GB`;
+
+      const miniBar = document.getElementById('storage-mini-bar');
+      const mini = document.getElementById('storage-mini');
+      if (miniBar) miniBar.style.width = `${pct}%`;
+      if (mini) mini.title = `${usedMB} MB / 1 GB used`;
     } catch (_) {
       document.getElementById('storage-text').textContent = 'Unavailable';
     }
@@ -313,6 +383,8 @@ const App = {
     document.querySelectorAll('#app-nav .nav-item').forEach((btn) => {
       btn.classList.toggle('active', btn.dataset.view === view);
     });
+    const userInfoBtn = document.getElementById('user-info');
+    if (userInfoBtn) userInfoBtn.classList.toggle('active', view === 'settings');
 
     const isFiles = view === 'files';
 
@@ -320,6 +392,7 @@ const App = {
     document.getElementById('files-view-wrapper').classList.toggle('hidden', !isFiles);
     document.getElementById('notes-view').classList.toggle('hidden', view !== 'notes');
     document.getElementById('tasks-view').classList.toggle('hidden', view !== 'tasks');
+    document.getElementById('settings-view').classList.toggle('hidden', view !== 'settings');
 
     this.closeSidebar();
 
@@ -363,7 +436,7 @@ const App = {
       await this.refresh();
     } catch (err) {
       console.error(err);
-      Toast.show(`Failed to delete "${file.filename}": ${err.message}`, 'error');
+      Toast.show(`Failed to delete "${file.filename}": ${friendlyError(err)}`, 'error');
     }
   },
 
@@ -378,7 +451,7 @@ const App = {
       await this.refresh();
     } catch (err) {
       console.error(err);
-      Toast.show(`Failed to move file: ${err.message}`, 'error');
+      Toast.show(`Failed to move file: ${friendlyError(err)}`, 'error');
     }
   },
 
@@ -403,7 +476,7 @@ const App = {
       await this.refresh();
     } catch (err) {
       console.error(err);
-      Toast.show(`Failed to create folder: ${err.message}`, 'error');
+      Toast.show(`Failed to create folder: ${friendlyError(err)}`, 'error');
     }
   },
 
@@ -422,7 +495,7 @@ const App = {
       await this.refresh();
     } catch (err) {
       console.error(err);
-      Toast.show(`Failed to delete folder: ${err.message}`, 'error');
+      Toast.show(`Failed to delete folder: ${friendlyError(err)}`, 'error');
     }
   },
 };

@@ -53,14 +53,6 @@ const Projects = {
         active: this._activeProjectId === project.id,
       }));
     }
-
-    // "New Project" button
-    const newBtn = document.createElement('button');
-    newBtn.className = 'new-folder-btn';
-    newBtn.id = 'new-project-btn';
-    newBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>New Project</span>';
-    newBtn.addEventListener('click', () => this.showCreateModal());
-    list.appendChild(newBtn);
   },
 
   _buildProjectItem({ id, label, icon, active }) {
@@ -234,7 +226,7 @@ const Projects = {
       await Tasks.load();
     } catch (err) {
       console.error(err);
-      Toast.show(`Failed to delete project: ${err.message}`, 'error');
+      Toast.show(`Failed to delete project: ${friendlyError(err)}`, 'error');
     }
   },
 
@@ -259,7 +251,7 @@ const Projects = {
       await this.load();
     } catch (err) {
       console.error(err);
-      Toast.show(`Failed to create project: ${err.message}`, 'error');
+      Toast.show(`Failed to create project: ${friendlyError(err)}`, 'error');
     }
   },
 
@@ -278,7 +270,7 @@ const Projects = {
       await this.load();
     } catch (err) {
       console.error(err);
-      Toast.show(`Failed to rename project: ${err.message}`, 'error');
+      Toast.show(`Failed to rename project: ${friendlyError(err)}`, 'error');
     }
   },
 

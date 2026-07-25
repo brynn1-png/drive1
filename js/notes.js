@@ -14,6 +14,10 @@ const Notes = {
   /* ------------------------------------------------------------------ */
 
   async load() {
+    const container = document.getElementById('notes-container');
+    if (container) {
+      container.innerHTML = '<div class="loading-state"><div class="spinner" aria-hidden="true"></div><div>Loading your notes...</div></div>';
+    }
     this._notes = await DB.getNotes();
     this.render();
     this._updateCount();
@@ -32,8 +36,13 @@ const Notes = {
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           </div>
           <div class="empty-title">No notes yet</div>
-          <div class="empty-subtitle">Click <strong>New Note</strong> to get started</div>
+          <div class="empty-subtitle">Capture your first idea, list, or reminder</div>
+          <button class="btn btn-primary empty-cta" id="notes-empty-cta">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New Note
+          </button>
         </div>`;
+      document.getElementById('notes-empty-cta').addEventListener('click', () => this.createNote());
       return;
     }
 
@@ -158,9 +167,10 @@ const Notes = {
         const note = await DB.insertNote({ title, content: '' });
         this._notes.unshift(note);
         this.openNote(note.id);
+        Toast.show('Note created.', 'success');
       } catch (err) {
         console.error(err);
-        Toast.show('Failed to create note.', 'error');
+        Toast.show(`Failed to create note: ${friendlyError(err)}`, 'error');
       }
     };
 

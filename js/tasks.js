@@ -14,6 +14,10 @@ const Tasks = {
   /* ------------------------------------------------------------------ */
 
   async load() {
+    const container = document.getElementById('tasks-container');
+    if (container) {
+      container.innerHTML = '<div class="loading-state"><div class="spinner" aria-hidden="true"></div><div>Loading your tasks...</div></div>';
+    }
     const projectId = Projects._activeProjectId;
     // Fetch all tasks (no status filter) so filter tabs stay visible
     this._allTasks = await DB.getTasks({ projectId, filter: 'all' });
@@ -63,12 +67,19 @@ const Tasks = {
         empty.innerHTML = `
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.15;margin:0 auto 12px;display:block"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           <div>No tasks yet</div>
-          <div style="font-size:13px;color:var(--text-muted);margin-top:4px">Add a task above to get started</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-top:4px">Track what needs to get done</div>
+          <button class="btn btn-primary empty-cta" id="tasks-empty-cta">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New Task
+          </button>
         `;
       } else {
         empty.textContent = 'No tasks match this filter';
       }
       container.appendChild(empty);
+      if (total === 0) {
+        document.getElementById('tasks-empty-cta').addEventListener('click', () => this.showCreateModal());
+      }
     } else {
       const list = document.createElement('div');
       list.className = 'task-list';
@@ -90,15 +101,26 @@ const Tasks = {
         label.className = 'task-label';
         label.textContent = task.title;
 
+        row.appendChild(checkbox);
+        row.appendChild(label);
+
+        if (task.due_date) {
+          const todayStr = new Date().toISOString().slice(0, 10);
+          const overdue = !task.completed && task.due_date < todayStr;
+          const dueBadge = document.createElement('span');
+          dueBadge.className = `task-due-badge${overdue ? ' overdue' : ''}`;
+          const dueDate = new Date(`${task.due_date}T00:00:00`);
+          dueBadge.textContent = dueDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+          dueBadge.title = overdue ? 'Overdue' : 'Due date';
+          row.appendChild(dueBadge);
+        }
+
         const del = document.createElement('button');
         del.className = 'task-delete-btn';
         del.dataset.action = 'delete-task';
         del.dataset.id = task.id;
         del.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
         del.setAttribute('aria-label', 'Delete task');
-
-        row.appendChild(checkbox);
-        row.appendChild(label);
 
         if (task.project_id) {
           const project = Projects._projects.find(p => p.id === task.project_id);
@@ -167,10 +189,12 @@ const Tasks = {
   showCreateModal() {
     const modal = document.getElementById('task-create-modal');
     const input = document.getElementById('task-create-input');
+    const dueDateInput = document.getElementById('task-create-due-date');
     const confirmBtn = document.getElementById('task-create-confirm');
     const cancelBtn = document.getElementById('task-create-cancel');
 
     input.value = '';
+    dueDateInput.value = '';
     modal.classList.remove('hidden');
     setTimeout(() => input.focus(), 50);
 
@@ -185,8 +209,9 @@ const Tasks = {
     confirmBtn.onclick = async () => {
       const title = input.value.trim();
       if (!title) { input.focus(); return; }
+      const dueDate = dueDateInput.value || null;
       cleanup();
-      await this._createTask(title);
+      await this._createTask(title, dueDate);
     };
 
     cancelBtn.onclick = cleanup;
@@ -198,18 +223,19 @@ const Tasks = {
   /*  Private helpers                                                     */
   /* ------------------------------------------------------------------ */
 
-  async _createTask(title) {
+  async _createTask(title, dueDate = null) {
     const projectId = Projects._activeProjectId === 'uncategorized' ? null : Projects._activeProjectId;
 
     try {
-      const task = await DB.insertTask(title, projectId);
+      const task = await DB.insertTask(title, projectId, dueDate);
       this._allTasks.unshift(task);
       this._tasks = this._applyStatusFilter(this._allTasks);
       this.render();
       this._updateCount();
+      Toast.show('Task added.', 'success');
     } catch (err) {
       console.error(err);
-      Toast.show('Failed to add task.', 'error');
+      Toast.show(`Failed to add task: ${friendlyError(err)}`, 'error');
     }
   },
 
