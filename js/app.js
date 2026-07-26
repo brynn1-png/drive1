@@ -131,23 +131,71 @@ const App = {
       }, 300);
     });
 
-    // Sort — use a lookup map so column names with underscores (created_at) parse safely
-    const SORT_MAP = {
-      'created_at_desc': { sortBy: 'created_at', sortOrder: 'desc' },
-      'created_at_asc':  { sortBy: 'created_at', sortOrder: 'asc'  },
-      'filename_asc':    { sortBy: 'filename',    sortOrder: 'asc'  },
-      'filename_desc':   { sortBy: 'filename',    sortOrder: 'desc' },
-      'size_desc':       { sortBy: 'size',        sortOrder: 'desc' },
-      'size_asc':        { sortBy: 'size',        sortOrder: 'asc'  },
-    };
-    document.getElementById('sort-select').addEventListener('change', async (e) => {
-      const parsed = SORT_MAP[e.target.value];
-      if (parsed) {
-        this.state.sortBy    = parsed.sortBy;
-        this.state.sortOrder = parsed.sortOrder;
-        await this.refresh();
-      }
-    });
+    // Sort — custom dropdown (a native <select>'s open list can't be
+    // themed, so this is a button + menu built to match the app's UI)
+    const sortDropdown = document.getElementById('sort-dropdown');
+    const sortTrigger = document.getElementById('sort-dropdown-trigger');
+    const sortMenu = document.getElementById('sort-dropdown-menu');
+    const sortLabel = document.getElementById('sort-dropdown-label');
+    if (sortDropdown && sortTrigger && sortMenu && sortLabel) {
+      const options = Array.from(sortMenu.querySelectorAll('.sort-dropdown-option'));
+
+      const closeSortMenu = () => {
+        sortMenu.classList.add('hidden');
+        sortTrigger.setAttribute('aria-expanded', 'false');
+      };
+
+      const openSortMenu = () => {
+        sortMenu.classList.remove('hidden');
+        sortTrigger.setAttribute('aria-expanded', 'true');
+        (sortMenu.querySelector('.sort-dropdown-option.active') || options[0]).focus();
+      };
+
+      sortTrigger.addEventListener('click', () => {
+        if (sortMenu.classList.contains('hidden')) openSortMenu();
+        else closeSortMenu();
+      });
+
+      sortTrigger.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openSortMenu();
+        }
+      });
+
+      options.forEach((opt, idx) => {
+        opt.addEventListener('click', async () => {
+          options.forEach((o) => { o.classList.remove('active'); o.setAttribute('aria-checked', 'false'); });
+          opt.classList.add('active');
+          opt.setAttribute('aria-checked', 'true');
+          sortLabel.textContent = opt.textContent;
+          this.state.sortBy = opt.dataset.sortBy;
+          this.state.sortOrder = opt.dataset.sortOrder;
+          closeSortMenu();
+          sortTrigger.focus();
+          await this.refresh();
+        });
+
+        opt.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            (options[idx + 1] || options[0]).focus();
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            (options[idx - 1] || options[options.length - 1]).focus();
+          } else if (e.key === 'Escape') {
+            closeSortMenu();
+            sortTrigger.focus();
+          } else if (e.key === 'Tab') {
+            closeSortMenu();
+          }
+        });
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!sortDropdown.contains(e.target)) closeSortMenu();
+      });
+    }
 
     // View toggle
     document.getElementById('grid-view-btn').addEventListener('click', () => this._setViewMode('grid'));

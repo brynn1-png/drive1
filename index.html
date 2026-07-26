@@ -382,14 +382,20 @@
             </div>
 
             <!-- Sort -->
-            <select id="sort-select" class="sort-select" aria-label="Sort files by">
-              <option value="created_at_desc">Newest first</option>
-              <option value="created_at_asc">Oldest first</option>
-              <option value="filename_asc">Name A-Z</option>
-              <option value="filename_desc">Name Z-A</option>
-              <option value="size_desc">Largest first</option>
-              <option value="size_asc">Smallest first</option>
-            </select>
+            <div class="sort-dropdown" id="sort-dropdown">
+              <button type="button" class="sort-dropdown-trigger" id="sort-dropdown-trigger" aria-haspopup="true" aria-expanded="false">
+                <span class="sort-dropdown-label" id="sort-dropdown-label">Newest first</span>
+                <svg class="sort-dropdown-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="sort-dropdown-menu hidden" id="sort-dropdown-menu" role="menu" aria-label="Sort files by">
+                <button type="button" class="sort-dropdown-option active" role="menuitemradio" aria-checked="true" data-sort-by="created_at" data-sort-order="desc">Newest first</button>
+                <button type="button" class="sort-dropdown-option" role="menuitemradio" aria-checked="false" data-sort-by="created_at" data-sort-order="asc">Oldest first</button>
+                <button type="button" class="sort-dropdown-option" role="menuitemradio" aria-checked="false" data-sort-by="filename" data-sort-order="asc">Name A-Z</button>
+                <button type="button" class="sort-dropdown-option" role="menuitemradio" aria-checked="false" data-sort-by="filename" data-sort-order="desc">Name Z-A</button>
+                <button type="button" class="sort-dropdown-option" role="menuitemradio" aria-checked="false" data-sort-by="size" data-sort-order="desc">Largest first</button>
+                <button type="button" class="sort-dropdown-option" role="menuitemradio" aria-checked="false" data-sort-by="size" data-sort-order="asc">Smallest first</button>
+              </div>
+            </div>
 
             <!-- Grid / List toggle -->
             <div class="view-toggle" role="group" aria-label="View mode">
