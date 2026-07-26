@@ -105,15 +105,6 @@ const App = {
       document.body.classList.add('sidebar-open');
     }
 
-    // Default: expand both sections on first visit, so their "New X"
-    // buttons are visible without needing to discover the chevron toggle.
-    if (localStorage.getItem('sidebar-folders-collapsed') === null) {
-      localStorage.setItem('sidebar-folders-collapsed', 'false');
-    }
-    if (localStorage.getItem('sidebar-projects-collapsed') === null) {
-      localStorage.setItem('sidebar-projects-collapsed', 'false');
-    }
-
     this._initControls();
     Upload.init();
     await Projects.load();

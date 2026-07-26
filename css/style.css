@@ -1423,6 +1423,40 @@ body.sidebar-open .sidebar {
   outline-offset: 2px;
 }
 
+/* Color scheme swatches — each button carries its own --sw-a/--sw-b
+   custom properties (set inline per swatch) for the duotone preview. */
+.palette-picker {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.palette-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--sw-a) 50%, var(--sw-b) 50%);
+  border: 2px solid var(--border);
+  cursor: pointer;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.palette-swatch:hover {
+  transform: scale(1.12);
+  box-shadow: var(--shadow-sm);
+}
+
+.palette-swatch:focus-visible {
+  outline: 2px solid var(--sw-a);
+  outline-offset: 2px;
+}
+
+.palette-swatch[aria-checked="true"] {
+  border-color: var(--text-primary);
+  box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 4px var(--sw-a);
+}
+
 /* ============================================================
    23. Notes — Card Grid
    ============================================================ */
