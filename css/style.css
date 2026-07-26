@@ -1921,7 +1921,7 @@ body.sidebar-open .sidebar {
 }
 
 .task-group-rename-btn, .task-group-delete-btn {
-  opacity: 0;
+  opacity: 0.55;
   width: 24px;
   height: 24px;
   border-radius: var(--radius-full);
@@ -1933,7 +1933,9 @@ body.sidebar-open .sidebar {
 }
 
 .task-group-card:hover .task-group-rename-btn,
-.task-group-card:hover .task-group-delete-btn {
+.task-group-card:hover .task-group-delete-btn,
+.task-group-rename-btn:focus-visible,
+.task-group-delete-btn:focus-visible {
   opacity: 1;
 }
 
@@ -2181,15 +2183,15 @@ body.sidebar-open .sidebar {
   box-shadow: 2px 2px 0 #1c1c1c;
 }
 
-@media (min-width: 769px) {
-  body:not(.sidebar-open) .sidebar-expand-tab {
-    display: flex;
-  }
+/* Shown whenever the sidebar is closed — on mobile this is the only way
+   to open it and reach Notes/Tasks/Settings, so it must not be desktop-only. */
+body:not(.sidebar-open) .sidebar-expand-tab {
+  display: flex;
+}
 
-  /* Reserve room in the top bar so its content doesn't sit under the tab */
-  body:not(.sidebar-open) .top-bar {
-    padding-left: 62px;
-  }
+/* Reserve room in the top bar so its content doesn't sit under the tab */
+body:not(.sidebar-open) .top-bar {
+  padding-left: 62px;
 }
 
 /* ============================================================
@@ -2794,18 +2796,86 @@ body.sidebar-open .sidebar {
     box-shadow: 8px 0 0 #1c1c1c;
   }
 
-  /* Top bar adjustments */
+  /* Top bar: title/breadcrumb + hamburger on row one, any remaining
+     controls (search/sort/view-toggle) wrap to their own row below
+     instead of all fighting for space on one line. */
   .top-bar {
-    padding: 0 16px;
+    flex-wrap: wrap;
+    height: auto;
+    min-height: var(--topbar-height);
+    padding: 10px 16px;
     gap: 10px;
-    flex-wrap: nowrap;
   }
 
-  .breadcrumb { flex-shrink: 1; min-width: 0; }
-  .breadcrumb-item { font-size: 14px; }
+  /* The hamburger tab only overlaps row one (title/breadcrumb) — reset the
+     desktop's whole-bar 62px reservation and apply it to that row only, so
+     row two (search/sort/toggle) stays flush with the content below it. */
+  body:not(.sidebar-open) .top-bar {
+    padding-left: 16px;
+  }
 
-  .search-input { width: 140px; }
-  .search-input:focus { width: 180px; }
+  /* Guarantee row one is at least as tall as the fixed hamburger tab
+     (36px) so row two never starts underneath it, regardless of how
+     short the title/breadcrumb text's own line height is. */
+  .breadcrumb {
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    margin-left: 46px;
+    min-height: 36px;
+  }
+  .breadcrumb-item {
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+    max-width: 100%;
+    vertical-align: bottom;
+  }
+
+  .view-title {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-left: 46px;
+    min-height: 36px;
+  }
+
+  .top-bar-controls {
+    flex-basis: 100%;
+    margin-left: 0;
+    flex-wrap: wrap;
+  }
+
+  /* Shrink instead of hiding — the trigger truncates but the native
+     picker still opens with full option labels, so sorting stays
+     available on narrow screens. */
+  .search-container { flex: 1 1 0%; min-width: 60px; }
+  .search-input { width: 100%; }
+  .search-input:focus { width: 100%; }
+
+  .sort-select {
+    flex: 0 0 auto;
+    width: 78px;
+    padding: 9px 22px 9px 8px;
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background-position: right 6px center;
+  }
+
+  /* "New Folder" / "Upload Files" / "New Project" / "New Task" duplicate
+     the FAB menu's equivalent actions — drop them from the header on
+     mobile entirely instead of crowding it, the FAB already covers them. */
+  #new-folder-btn, #upload-label,
+  #new-project-from-tasks-btn, #new-task-btn {
+    display: none;
+  }
+
+  .folder-chip-row { padding: 12px 16px 0; }
 
   .files-container { padding: 12px 16px 20px; }
   .file-count { padding: 10px 16px 0; }
@@ -2836,31 +2906,12 @@ body.sidebar-open .sidebar {
 @media (max-width: 600px) {
   /* Top bar: tighten up */
   .top-bar {
-    padding: 0 12px;
+    padding: 8px 12px;
     gap: 8px;
-    height: 52px;
+    min-height: 52px;
   }
 
   .breadcrumb-item { font-size: 13px; }
-
-  .search-container { flex: 1; min-width: 0; }
-  .search-input { width: 100%; }
-  .search-input:focus { width: 100%; }
-
-  /* Shrink instead of hiding — the trigger truncates but the native
-     picker still opens with full option labels, so sorting stays
-     available on narrow screens. */
-  .search-container { flex: 1 1 auto; min-width: 60px; }
-  .sort-select {
-    flex: 0 0 auto;
-    width: 78px;
-    padding: 9px 22px 9px 8px;
-    font-size: 12px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    background-position: right 6px center;
-  }
 
   /* Grid: smaller cards */
   .files-container.grid-view {
@@ -2963,6 +3014,6 @@ body.sidebar-open .sidebar {
 
   .col-date { display: none; }
 
-  .top-bar { padding: 0 10px; gap: 6px; }
+  .top-bar { padding: 8px 10px; gap: 6px; }
   .search-input { font-size: 16px; } /* prevent iOS zoom */
 }
