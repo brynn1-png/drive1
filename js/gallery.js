@@ -50,6 +50,7 @@ const Gallery = {
 
   _buildGridCard(file) {
     const isImage = IMAGE_TYPES.includes(file.file_type);
+    const isPdf = file.file_type === 'application/pdf';
     const publicUrl = Storage.getPublicUrl(file.storage_path);
 
     const card = document.createElement('div');
@@ -69,6 +70,11 @@ const Gallery = {
       // Click preview to open lightbox
       preview.addEventListener('click', () => this._openLightbox(publicUrl, file.filename));
       preview.style.cursor = 'zoom-in';
+    } else if (isPdf) {
+      preview.innerHTML = `<span class="file-icon">${this._getIcon(file.file_type)}</span>`;
+      // Click preview to open the PDF in a new tab
+      preview.addEventListener('click', () => this._openFile(file.storage_path, file.filename));
+      preview.style.cursor = 'pointer';
     } else {
       preview.innerHTML = `<span class="file-icon">${this._getIcon(file.file_type)}</span>`;
     }
@@ -86,6 +92,7 @@ const Gallery = {
     const actions = document.createElement('div');
     actions.className = 'file-card-actions';
     actions.innerHTML = `
+      ${isPdf ? `<button class="action-btn" title="Open" data-action="open" data-id="${file.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></button>` : ''}
       <button class="action-btn" title="Download" data-action="download" data-id="${file.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
       <button class="action-btn" title="Move to folder" data-action="move" data-id="${file.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg></button>
       <button class="action-btn danger" title="Delete" data-action="delete" data-id="${file.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
@@ -120,6 +127,7 @@ const Gallery = {
 
   _buildListRow(file) {
     const isImage = IMAGE_TYPES.includes(file.file_type);
+    const isPdf = file.file_type === 'application/pdf';
     const publicUrl = Storage.getPublicUrl(file.storage_path);
 
     const row = document.createElement('div');
@@ -139,6 +147,7 @@ const Gallery = {
       <div class="list-col col-actions">
         <button class="action-btn" title="Download" data-action="download" data-id="${file.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
         ${isImage ? `<button class="action-btn" title="Preview" data-action="preview" data-id="${file.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>` : ''}
+        ${isPdf ? `<button class="action-btn" title="Open" data-action="open" data-id="${file.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></button>` : ''}
         <button class="action-btn" title="Move to folder" data-action="move" data-id="${file.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg></button>
         <button class="action-btn danger" title="Delete" data-action="delete" data-id="${file.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
       </div>
@@ -161,6 +170,7 @@ const Gallery = {
 
         if (action === 'download') this._downloadFile(file.storage_path, file.filename);
         if (action === 'preview')  this._openLightbox(publicUrl, file.filename);
+        if (action === 'open')     this._openFile(file.storage_path, file.filename);
         if (action === 'delete')   App.deleteFile(file);
         if (action === 'move')     App.openMoveModal(file);
       });
@@ -228,6 +238,39 @@ const Gallery = {
     } catch (err) {
       console.error('Download failed:', err);
       Toast.show(`Failed to download "${filename}": ${friendlyError(err)}`, 'error');
+    }
+  },
+
+  /* ------------------------------------------------------------------ */
+  /*  Open in new tab (PDFs and other browser-viewable files)             */
+  /* ------------------------------------------------------------------ */
+
+  async _openFile(storagePath, filename) {
+    // Open the tab synchronously (still inside the click's user gesture) so
+    // browsers don't treat the later navigation as a blocked popup, then
+    // point it at the file once the blob is ready.
+    const tab = window.open('', '_blank');
+
+    try {
+      const { data, error } = await supabaseClient.storage
+        .from(BUCKET_NAME)
+        .download(storagePath);
+
+      if (error) throw error;
+
+      const blobUrl = URL.createObjectURL(data);
+      if (tab) {
+        tab.location.href = blobUrl;
+      } else {
+        // Popup blocked — fall back to a same-tab navigation.
+        window.location.href = blobUrl;
+      }
+
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+    } catch (err) {
+      if (tab) tab.close();
+      console.error('Open failed:', err);
+      Toast.show(`Failed to open "${filename}": ${friendlyError(err)}`, 'error');
     }
   },
 

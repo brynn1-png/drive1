@@ -382,7 +382,7 @@ const App = {
   async _loadFiles() {
     const { searchQuery, currentFolder, sortBy, sortOrder } = this.state;
     // When searching, look across all folders
-    const folderFilter = searchQuery.trim() ? '__all__' : currentFolder;
+    const folderFilter = (searchQuery.trim() || currentFolder === 'root') ? '__all__' : currentFolder;
     this.state.files = await DB.getFiles({
       folder:    folderFilter,
       search:    searchQuery,

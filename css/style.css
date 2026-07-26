@@ -1255,8 +1255,8 @@ body.sidebar-open .sidebar {
   min-width: 280px;
   max-width: 400px;
   background: var(--bg-surface);
-  border: 2px solid var(--border);
-  box-shadow: var(--shadow-card);
+  border: none;
+  box-shadow: var(--shadow-accent);
   opacity: 0;
   transform: translateX(30px);
   transition: opacity 0.2s var(--ease), transform 0.2s var(--ease);
@@ -1265,13 +1265,13 @@ body.sidebar-open .sidebar {
 
 .toast-show { opacity: 1; transform: translateX(0); }
 
-.toast-success { border-left: 6px solid var(--success); color: var(--success); }
-.toast-error   { border-left: 6px solid var(--error);   color: var(--error); }
-.toast-warning { border-left: 6px solid var(--warning); color: var(--warning); }
-.toast-info    { border-left: 6px solid var(--info);    color: var(--info); }
+.toast-success { color: var(--lime); }
+.toast-error   { color: var(--error); }
+.toast-warning { color: var(--warning); }
+.toast-info    { color: var(--info); }
 
-.toast-icon { display: flex; align-items: center; flex-shrink: 0; }
-.toast-msg { flex: 1; color: var(--text-primary); font-size: 13px; }
+.toast-icon { display: flex; align-items: center; flex-shrink: 0; color: inherit; }
+.toast-msg { flex: 1; color: var(--text-primary); font-size: 13px; font-weight: 700; }
 
 /* ============================================================
    19. Utility
