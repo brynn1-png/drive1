@@ -18,36 +18,12 @@ html.theme-3d {
   --shadow-accent:   0 6px 16px -4px rgba(15, 30, 66, 0.28);
   --shadow-sm:       0 3px 8px -2px rgba(15, 30, 66, 0.2);
 
-  --border:          rgba(15, 30, 66, 0.08);
-  --border-hover:    rgba(15, 30, 66, 0.18);
-  --border-accent:   rgba(15, 30, 66, 0.18);
-
-  /* Cooler, softer surfaces instead of the flat brutalist white/black,
-     plus a blue accent that pairs with the existing lime brand color
-     instead of the old flat charcoal. */
-  --bg-base:         #eef2f8;
-  --bg-surface:      #fbfcff;
-  --bg-card:         linear-gradient(150deg, #ffffff, #eef2fa);
-  --bg-card-hover:   linear-gradient(150deg, #ffffff, #e6ecf9);
-  --bg-input:        #ffffff;
-  --bg-input-focus:  #eaf1ff;
-  --bg-modal:        linear-gradient(160deg, #ffffff, #f3f5fb);
-  --bg-sidebar:      linear-gradient(180deg, #14203f, #0a0f1e);
-
-  --accent:          #2563eb;
-  --accent-light:    #60a5fa;
-  --accent-dark:     #1d4ed8;
-  --accent-glow:     rgba(37, 99, 235, 0.35);
-
-  /* Lime was the brand's bright highlight color (upload button, storage
-     bar, pin/active highlights, the toggle switch's "on" state, focus
-     outlines). It needs to stay light enough for the black text/icons
-     that sit on top of it (.upload-btn, .fab), so it can't just equal
-     --accent — instead it reuses the same blue family as --accent
-     (a lighter tint of it) so the two read as one cohesive palette
-     instead of two unrelated blues fighting each other. */
-  --lime:            #60a5fa;
-  --lime-hover:      #3b82f6;
+  /* Surfaces, borders, and accent/lime are NOT set here — they come from
+     the required html.theme-3d.palette-* companion block in palettes.css
+     (one always applies; "classic" gets a class like every other palette).
+     Keeping them out of this bare block is what lets each color scheme
+     fully own its own surfaces under the 3D theme instead of every
+     palette inheriting one hardcoded blue. */
 
   --transition:      all 0.3s var(--ease);
   --transition-slow: all 0.4s var(--ease);
@@ -64,12 +40,11 @@ html.theme-3d .note-textarea {
    Soft elevation on hover/active instead of the hard "pressed"
    offset used by the base brutalist theme.
    ------------------------------------------------------------ */
-html.theme-3d .upload-btn:hover,
-html.theme-3d .new-folder-btn:hover,
 html.theme-3d .btn-ghost:hover,
 html.theme-3d .btn-danger:hover,
 html.theme-3d .note-card:hover,
 html.theme-3d .task-row:hover,
+html.theme-3d .task-group-card:hover,
 html.theme-3d .fab:hover,
 html.theme-3d .fab-menu-item:hover,
 html.theme-3d .lightbox-close:hover {
@@ -82,7 +57,7 @@ html.theme-3d .btn-primary:hover {
   box-shadow: var(--shadow-accent), 0 0 0 4px var(--accent-glow);
 }
 
-html.theme-3d .folder-item.active,
+html.theme-3d .folder-chip.active,
 html.theme-3d .nav-item.active,
 html.theme-3d .fab.active,
 html.theme-3d .btn-danger {
@@ -110,7 +85,6 @@ html.theme-3d .note-card-pin:hover {
 
 /* Press states — a gentle scale-down instead of the brutalist
    "shove into the corner, drop the shadow" mechanic. */
-html.theme-3d .upload-btn:active,
 html.theme-3d .btn-primary:active,
 html.theme-3d .btn-danger:active,
 html.theme-3d .fab:active {
@@ -192,3 +166,22 @@ html.theme-3d .settings-section:hover {
   transform: translateY(-2px);
   box-shadow: 0 16px 32px -10px rgba(15, 30, 66, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
+
+/* ------------------------------------------------------------
+   Note Checklist — 3D theme adjustments
+   ------------------------------------------------------------ */
+html.theme-3d .note-checklist-item {
+  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-sm);
+}
+
+html.theme-3d .note-checklist-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-accent);
+}
+
+html.theme-3d .note-checklist-add-row {
+  border-style: solid;
+  border-radius: var(--radius-sm);
+}
+

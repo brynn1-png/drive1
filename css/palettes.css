@@ -1,0 +1,187 @@
+/* ============================================================
+   Color Scheme Palettes — override layer
+   Each palette is a duotone: neutral black/near-black structure
+   (sidebar, borders, shadow "ink") shared by every palette — same
+   as Classic — plus ONE vivid accent/lime hue that's unique per
+   palette. Earlier this layer also hue-tinted the backgrounds and
+   sidebar per palette, but that made every palette read as "one
+   color, lighter or darker" instead of a real scheme; going back to
+   Classic's black-plus-one-accent formula for all of them fixes that.
+   Text tokens are untouched so contrast stays identical everywhere.
+
+   Loaded after theme-3d.css so a palette class always wins tokens it
+   defines, regardless of whether html.theme-3d is also present
+   (equal specificity, later source order wins). Toggled via
+   #palette-picker (app.js), persisted to localStorage under the
+   "ui-palette" key.
+
+   html.theme-3d itself carries no color tokens of its own (see
+   theme-3d.css) — every palette needs an explicit
+   html.theme-3d.palette-* block below to supply surfaces, including
+   "classic". The 4 named palettes reuse classic's exact 3D surface
+   values and only swap accent/lime, keeping the same duotone formula
+   under both UI themes.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   Classic (black / yellow) — flat theme needs no override (it's the
+   :root default). Under the 3D theme it still needs its own surfaces;
+   the 4 named palettes below reuse these same surface values.
+   ------------------------------------------------------------ */
+html.theme-3d.palette-classic {
+  --bg-base:         #f2f2f0;
+  --bg-surface:      #fdfdfb;
+  --bg-card:         linear-gradient(150deg, #ffffff, #f4f4f0);
+  --bg-card-hover:   linear-gradient(150deg, #ffffff, #ecebe4);
+  --bg-input:        #ffffff;
+  --bg-input-focus:  #f0f0ff;
+  --bg-modal:        linear-gradient(160deg, #ffffff, #f6f6f2);
+  --bg-sidebar:      linear-gradient(180deg, #1f1f1f, #0d0d0d);
+
+  --border:          rgba(20, 20, 20, 0.12);
+  --border-hover:    rgba(20, 20, 20, 0.22);
+  --border-accent:   rgba(20, 20, 20, 0.22);
+
+  --accent:          #1c1c1c;
+  --accent-light:    #3d3d3d;
+  --accent-dark:     #000000;
+  --accent-glow:     rgba(28, 28, 28, 0.25);
+  --lime:            #c8ff00;
+  --lime-hover:      #b8ee00;
+}
+
+/* ------------------------------------------------------------
+   Violet — black + violet
+   ------------------------------------------------------------ */
+html.palette-violet {
+  --accent:          #7c3aed;
+  --accent-light:    #a78bfa;
+  --accent-dark:     #5b21b6;
+  --accent-glow:     rgba(124, 58, 237, 0.35);
+  --lime:            #c4b5fd;
+  --lime-hover:      #a78bfa;
+}
+
+html.theme-3d.palette-violet {
+  --bg-base:         #f2f2f0;
+  --bg-surface:      #fdfdfb;
+  --bg-card:         linear-gradient(150deg, #ffffff, #f4f4f0);
+  --bg-card-hover:   linear-gradient(150deg, #ffffff, #ecebe4);
+  --bg-input:        #ffffff;
+  --bg-input-focus:  #f0f0ff;
+  --bg-modal:        linear-gradient(160deg, #ffffff, #f6f6f2);
+  --bg-sidebar:      linear-gradient(180deg, #1f1f1f, #0d0d0d);
+
+  --border:          rgba(20, 20, 20, 0.12);
+  --border-hover:    rgba(20, 20, 20, 0.22);
+  --border-accent:   rgba(20, 20, 20, 0.22);
+
+  --accent:          #7c3aed;
+  --accent-light:    #a78bfa;
+  --accent-dark:     #5b21b6;
+  --accent-glow:     rgba(124, 58, 237, 0.35);
+  --lime:            #c4b5fd;
+  --lime-hover:      #a78bfa;
+}
+
+/* ------------------------------------------------------------
+   Ocean — black + blue
+   ------------------------------------------------------------ */
+html.palette-ocean {
+  --accent:          #2563eb;
+  --accent-light:    #60a5fa;
+  --accent-dark:     #1d4ed8;
+  --accent-glow:     rgba(37, 99, 235, 0.35);
+  --lime:            #60a5fa;
+  --lime-hover:      #3b82f6;
+}
+
+html.theme-3d.palette-ocean {
+  --bg-base:         #f2f2f0;
+  --bg-surface:      #fdfdfb;
+  --bg-card:         linear-gradient(150deg, #ffffff, #f4f4f0);
+  --bg-card-hover:   linear-gradient(150deg, #ffffff, #ecebe4);
+  --bg-input:        #ffffff;
+  --bg-input-focus:  #f0f0ff;
+  --bg-modal:        linear-gradient(160deg, #ffffff, #f6f6f2);
+  --bg-sidebar:      linear-gradient(180deg, #1f1f1f, #0d0d0d);
+
+  --border:          rgba(20, 20, 20, 0.12);
+  --border-hover:    rgba(20, 20, 20, 0.22);
+  --border-accent:   rgba(20, 20, 20, 0.22);
+
+  --accent:          #2563eb;
+  --accent-light:    #60a5fa;
+  --accent-dark:     #1d4ed8;
+  --accent-glow:     rgba(37, 99, 235, 0.35);
+  --lime:            #60a5fa;
+  --lime-hover:      #3b82f6;
+}
+
+/* ------------------------------------------------------------
+   Coral — black + coral/red
+   ------------------------------------------------------------ */
+html.palette-coral {
+  --accent:          #f43f5e;
+  --accent-light:    #fb7185;
+  --accent-dark:     #be123c;
+  --accent-glow:     rgba(244, 63, 94, 0.35);
+  --lime:            #fda4af;
+  --lime-hover:      #fb7185;
+}
+
+html.theme-3d.palette-coral {
+  --bg-base:         #f2f2f0;
+  --bg-surface:      #fdfdfb;
+  --bg-card:         linear-gradient(150deg, #ffffff, #f4f4f0);
+  --bg-card-hover:   linear-gradient(150deg, #ffffff, #ecebe4);
+  --bg-input:        #ffffff;
+  --bg-input-focus:  #f0f0ff;
+  --bg-modal:        linear-gradient(160deg, #ffffff, #f6f6f2);
+  --bg-sidebar:      linear-gradient(180deg, #1f1f1f, #0d0d0d);
+
+  --border:          rgba(20, 20, 20, 0.12);
+  --border-hover:    rgba(20, 20, 20, 0.22);
+  --border-accent:   rgba(20, 20, 20, 0.22);
+
+  --accent:          #f43f5e;
+  --accent-light:    #fb7185;
+  --accent-dark:     #be123c;
+  --accent-glow:     rgba(244, 63, 94, 0.35);
+  --lime:            #fda4af;
+  --lime-hover:      #fb7185;
+}
+
+/* ------------------------------------------------------------
+   Forest — black + green
+   ------------------------------------------------------------ */
+html.palette-forest {
+  --accent:          #059669;
+  --accent-light:    #34d399;
+  --accent-dark:     #047857;
+  --accent-glow:     rgba(5, 150, 105, 0.35);
+  --lime:            #6ee7b7;
+  --lime-hover:      #34d399;
+}
+
+html.theme-3d.palette-forest {
+  --bg-base:         #f2f2f0;
+  --bg-surface:      #fdfdfb;
+  --bg-card:         linear-gradient(150deg, #ffffff, #f4f4f0);
+  --bg-card-hover:   linear-gradient(150deg, #ffffff, #ecebe4);
+  --bg-input:        #ffffff;
+  --bg-input-focus:  #f0f0ff;
+  --bg-modal:        linear-gradient(160deg, #ffffff, #f6f6f2);
+  --bg-sidebar:      linear-gradient(180deg, #1f1f1f, #0d0d0d);
+
+  --border:          rgba(20, 20, 20, 0.12);
+  --border-hover:    rgba(20, 20, 20, 0.22);
+  --border-accent:   rgba(20, 20, 20, 0.22);
+
+  --accent:          #059669;
+  --accent-light:    #34d399;
+  --accent-dark:     #047857;
+  --accent-glow:     rgba(5, 150, 105, 0.35);
+  --lime:            #6ee7b7;
+  --lime-hover:      #34d399;
+}

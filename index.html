@@ -15,12 +15,17 @@
   <!-- Styles -->
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/theme-3d.css" />
+  <link rel="stylesheet" href="css/palettes.css" />
 
-  <!-- Apply saved UI theme before first paint to avoid a flash of the wrong theme -->
+  <!-- Apply saved UI theme/palette before first paint to avoid a flash of the wrong theme -->
   <script>
     if (localStorage.getItem('ui-theme') === '3d') {
       document.documentElement.classList.add('theme-3d');
     }
+    var knownPalettes = ['classic', 'violet', 'ocean', 'coral', 'forest'];
+    var savedPalette = localStorage.getItem('ui-palette');
+    if (knownPalettes.indexOf(savedPalette) === -1) savedPalette = 'classic';
+    document.documentElement.classList.add('palette-' + savedPalette);
   </script>
 </head>
 <body>
@@ -293,16 +298,9 @@
           <span class="logo-text">MyDrive</span>
         </div>
         <button class="sidebar-collapse-btn" id="sidebar-collapse-btn" aria-label="Collapse sidebar">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
       </div>
-
-      <!-- Upload button (label wraps hidden input) -->
-      <label class="upload-btn" for="file-input" id="upload-label" role="button" tabindex="0">
-        <svg class="upload-btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <span>Upload Files</span>
-      </label>
-      <input type="file" id="file-input" multiple hidden aria-label="Select files to upload" />
 
       <!-- App navigation -->
       <div class="sidebar-section sidebar-nav-section">
@@ -322,39 +320,6 @@
             <span class="nav-badge" id="tasks-count" title="Tasks remaining"></span>
           </button>
         </nav>
-      </div>
-
-      <!-- Sidebar sections — collapsible -->
-      <div class="sidebar-section sidebar-context">
-        <div class="sidebar-section-group" id="folders-section">
-          <button class="sidebar-section-toggle" data-section="folders" aria-expanded="true">
-            <span>Folders</span>
-            <svg class="section-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          <div class="sidebar-section-content">
-            <div class="sidebar-section-caption">Organize your files</div>
-            <nav id="folder-list" aria-label="Folder navigation"></nav>
-            <button class="new-folder-btn" id="new-folder-btn" aria-label="Create new folder">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              <span>New Folder</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="sidebar-section-group" id="projects-section">
-          <button class="sidebar-section-toggle" data-section="projects" aria-expanded="true">
-            <span>Projects</span>
-            <svg class="section-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          <div class="sidebar-section-content">
-            <div class="sidebar-section-caption">Group your tasks</div>
-            <nav id="project-list" aria-label="Project navigation"></nav>
-            <button class="new-folder-btn" id="new-project-btn" aria-label="Create new project">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              <span>New Project</span>
-            </button>
-          </div>
-        </div>
       </div>
 
       <!-- User info -->
@@ -383,7 +348,7 @@
 
     <!-- Expand tab (visible on desktop when sidebar is collapsed) -->
     <button class="sidebar-expand-tab" id="sidebar-expand-tab" aria-label="Open sidebar">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
 
     <!-- ==================== Main Content ==================== -->
@@ -435,8 +400,21 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
               </button>
             </div>
+
+            <button class="btn btn-ghost" id="new-folder-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              New Folder
+            </button>
+            <label class="btn btn-primary" for="file-input" id="upload-label" role="button" tabindex="0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Upload Files
+            </label>
+            <input type="file" id="file-input" multiple hidden aria-label="Select files to upload" />
           </div>
         </header>
+
+        <!-- Folder switcher (chips) -->
+        <nav class="folder-chip-row" id="folder-list" aria-label="Folder navigation"></nav>
 
         <!-- Drag-and-drop visual overlay (shown only during drag) -->
         <div class="drop-zone-overlay hidden" id="drop-zone-overlay" aria-hidden="true">
@@ -490,22 +468,46 @@
         </header>
         <div class="notes-split">
           <div class="notes-list-panel" id="notes-container"></div>
-          <div class="note-editor hidden" id="note-editor">
-            <div class="note-editor-header">
-              <button class="btn btn-ghost note-close-btn" id="note-back-btn" aria-label="Close note">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
-              <span class="note-editor-hint" id="note-save-status">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                Saved
-              </span>
-              <button class="btn btn-ghost note-pin-btn" id="note-pin-btn">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L8 10H3l5 4-2 8 6-5 6 5-2-8 5-4h-5z"/></svg>
-                Pin
-              </button>
+        </div>
+
+        <!-- Note Editor Modal -->
+        <div id="note-editor-modal" class="modal hidden" role="dialog" aria-modal="true">
+          <div class="modal-card note-editor-modal-card">
+            <div class="note-editor" id="note-editor">
+              <div class="note-editor-header">
+                <button class="btn btn-ghost note-close-btn" id="note-back-btn" aria-label="Close note">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+                <span class="note-editor-hint" id="note-save-status">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Saved
+                </span>
+                <button class="btn btn-ghost note-pin-btn" id="note-pin-btn">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L8 10H3l5 4-2 8 6-5 6 5-2-8 5-4h-5z"/></svg>
+                  Pin
+                </button>
+              </div>
+              <input type="text" id="note-title-input" placeholder="Note title..." maxlength="100" autocomplete="off" class="note-title-input" />
+
+              <div class="note-editor-body">
+                <div class="note-checklist" id="note-checklist">
+                  <div class="note-checklist-header">
+                    <span class="note-checklist-title">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                      Checklist
+                    </span>
+                    <span class="note-checklist-count" id="note-checklist-count"></span>
+                  </div>
+                  <div class="note-checklist-list" id="note-checklist-list"></div>
+                  <div class="note-checklist-add-row">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <input type="text" id="note-checklist-add-input" class="note-checklist-add-input" placeholder="Add a task..." autocomplete="off" maxlength="200" />
+                  </div>
+                </div>
+
+                <textarea id="note-textarea" placeholder="Start writing..." class="note-textarea"></textarea>
+              </div>
             </div>
-            <input type="text" id="note-title-input" placeholder="Note title..." maxlength="100" autocomplete="off" class="note-title-input" />
-            <textarea id="note-textarea" placeholder="Start writing..." class="note-textarea"></textarea>
           </div>
         </div>
       </section>
@@ -518,6 +520,10 @@
             Tasks
           </h2>
           <div class="top-bar-controls">
+            <button class="btn btn-ghost" id="new-project-from-tasks-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+              New Project
+            </button>
             <button class="btn btn-primary" id="new-task-btn">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               New Task
@@ -525,6 +531,26 @@
           </div>
         </header>
         <div class="view-content" id="tasks-container"></div>
+
+        <!-- Task Group Modal -->
+        <div id="task-group-modal" class="modal hidden" role="dialog" aria-modal="true">
+          <div class="modal-card task-group-modal-card">
+            <div class="task-group-editor">
+              <div class="task-group-editor-header">
+                <button class="btn btn-ghost note-close-btn" id="task-group-back-btn" aria-label="Close">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+                <span class="task-group-editor-title" id="task-group-title"></span>
+                <span class="task-group-editor-count" id="task-group-count"></span>
+              </div>
+              <div class="task-group-list" id="task-group-list"></div>
+              <div class="task-group-add-row" id="task-group-add-row">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <input type="text" id="task-group-add-input" class="task-group-add-input" placeholder="Add a task..." autocomplete="off" maxlength="200" />
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- ==================== Settings View ==================== -->
@@ -548,6 +574,18 @@
                 <input type="checkbox" id="theme-toggle-checkbox" aria-label="Toggle 3D interface" />
                 <span class="theme-switch-track"><span class="theme-switch-thumb"></span></span>
               </label>
+            </div>
+
+            <div class="settings-subsection">
+              <div class="settings-row-label">Color Scheme</div>
+              <div class="settings-row-desc">Hover a swatch to preview it, click to apply.</div>
+              <div class="palette-picker" id="palette-picker" role="radiogroup" aria-label="Color scheme">
+                <button type="button" class="palette-swatch" data-palette="classic" style="--sw-a:#1c1c1c; --sw-b:#c8ff00;" role="radio" aria-checked="true" aria-label="Classic"></button>
+                <button type="button" class="palette-swatch" data-palette="violet" style="--sw-a:#7c3aed; --sw-b:#c4b5fd;" role="radio" aria-checked="false" aria-label="Violet"></button>
+                <button type="button" class="palette-swatch" data-palette="ocean" style="--sw-a:#2563eb; --sw-b:#60a5fa;" role="radio" aria-checked="false" aria-label="Ocean"></button>
+                <button type="button" class="palette-swatch" data-palette="coral" style="--sw-a:#f43f5e; --sw-b:#fda4af;" role="radio" aria-checked="false" aria-label="Coral"></button>
+                <button type="button" class="palette-swatch" data-palette="forest" style="--sw-a:#059669; --sw-b:#6ee7b7;" role="radio" aria-checked="false" aria-label="Forest"></button>
+              </div>
             </div>
           </div>
 

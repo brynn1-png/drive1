@@ -52,6 +52,7 @@ create table if not exists tasks (
   completed boolean default false,
   due_date date,
   project_id uuid references projects(id) on delete set null,
+  note_id uuid references notes(id) on delete set null,
   created_at timestamptz default now()
 );
 
@@ -66,6 +67,7 @@ create index if not exists idx_tasks_user_id on tasks(user_id);
 create index if not exists idx_tasks_created_at on tasks(created_at desc);
 create index if not exists idx_tasks_completed on tasks(completed);
 create index if not exists idx_tasks_project_id on tasks(project_id);
+create index if not exists idx_tasks_note_id on tasks(note_id);
 create index if not exists idx_projects_user_id on projects(user_id);
 create index if not exists idx_projects_name on projects(name);
 

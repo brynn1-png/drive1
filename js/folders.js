@@ -39,27 +39,27 @@ const Folders = {
 
   _buildFolderItem({ name, label, icon, active }) {
     const item = document.createElement('div');
-    item.className = `folder-item ${active ? 'active' : ''}`;
+    item.className = `folder-chip ${active ? 'active' : ''}`;
     item.dataset.folder = name;
 
     const deleteBtnHtml = name !== 'root'
-      ? `<button class="folder-delete-btn" data-folder="${this._esc(name)}" title="Delete folder"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`
+      ? `<button class="folder-chip-delete" data-folder="${this._esc(name)}" title="Delete folder"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`
       : '';
 
     item.innerHTML = `
-      <span class="folder-item-icon">${icon}</span>
-      <span class="folder-item-label">${this._esc(label)}</span>
+      <span class="folder-chip-icon">${icon}</span>
+      <span class="folder-chip-label">${this._esc(label)}</span>
       ${deleteBtnHtml}
     `;
 
     // Navigate on click (but not the delete button)
     item.addEventListener('click', (e) => {
-      if (e.target.closest('.folder-delete-btn')) return;
+      if (e.target.closest('.folder-chip-delete')) return;
       App.navigateTo(name);
     });
 
     // Delete folder button
-    const deleteBtn = item.querySelector('.folder-delete-btn');
+    const deleteBtn = item.querySelector('.folder-chip-delete');
     if (deleteBtn) {
       deleteBtn.addEventListener('click', (e) => {
         e.stopPropagation();

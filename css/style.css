@@ -205,242 +205,65 @@ body.sidebar-open .sidebar {
   white-space: nowrap;
 }
 
-/* Upload button */
-.upload-btn {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 8px 16px;
-  padding: 12px 16px;
-  background: var(--lime);
-  border: 2px solid var(--border);
-  border-radius: var(--radius-md);
-  font-size: 14px;
-  font-weight: 700;
-  color: #000000;
-  cursor: pointer;
-  transition: var(--transition);
-  box-shadow: var(--shadow-accent);
-  user-select: none;
-}
-
-.upload-btn:hover {
-  transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0 #1c1c1c;
-}
-
-.upload-btn:active {
-  transform: translate(3px, 3px);
-  box-shadow: none;
-}
-
-.upload-btn-icon {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-
 /* Sidebar sections */
 .sidebar-section {
   padding: 8px 0;
 }
 
-.sidebar-nav-section {
-  padding: 4px 0 8px;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.15);
-}
-
-.sidebar-context {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.sidebar-context-panel {
-  padding: 8px 0;
-}
-
-.sidebar-section-title {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.4);
-  padding: 8px 20px 8px;
+/* ============================================================
+   Files — Folder switcher (chip row, in-page)
+   ============================================================ */
+.folder-chip-row {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 16px 24px 0;
 }
 
-/* Collapsible section groups */
-.sidebar-section-group {
-  margin-bottom: 4px;
-}
-
-.sidebar-section-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 8px 20px;
-  background: none;
-  border: none;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.4);
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.sidebar-section-toggle:hover {
-  color: rgba(255, 255, 255, 0.7);
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.section-chevron {
-  transition: transform 0.2s var(--ease);
-  flex-shrink: 0;
-}
-
-.sidebar-section-group.collapsed .section-chevron {
-  transform: rotate(-90deg);
-}
-
-.sidebar-section-content {
-  overflow: hidden;
-  max-height: 500px;
-  transition: max-height 0.25s var(--ease), opacity 0.2s var(--ease);
-  opacity: 1;
-}
-
-.sidebar-section-caption {
-  padding: 0 20px 8px;
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.35);
-}
-
-.sidebar-section-group.collapsed .sidebar-section-content {
-  max-height: 0;
-  opacity: 0;
-}
-
-/* New folder button */
-.new-folder-btn {
+.folder-chip {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 4px 16px;
-  padding: 10px 16px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: var(--radius-md);
-  font-size: 13px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.7);
-  transition: var(--transition);
-}
-
-.new-folder-btn svg { flex-shrink: 0; opacity: 0.6; }
-
-.new-folder-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.4);
-  color: #ffffff;
-  transform: translate(1px, 1px);
-  box-shadow: 2px 2px 0 rgba(255, 255, 255, 0.15);
-}
-
-.new-folder-btn:hover svg { opacity: 1; }
-
-/* Folder items */
-.folder-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
-  margin: 2px 10px;
-  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-full);
   cursor: pointer;
   transition: var(--transition);
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.6);
-  position: relative;
-  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
 }
 
-.folder-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.2);
+.folder-chip:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 #1c1c1c;
 }
 
-.folder-item.active {
+.folder-chip.active {
   background: var(--accent);
   color: #ffffff;
-  border: 1px solid var(--border);
-  box-shadow: 2px 2px 0 #1c1c1c;
-  font-weight: 700;
+  border-color: var(--accent);
 }
 
-.folder-item-icon { flex-shrink: 0; display: flex; align-items: center; opacity: 0.7; }
-.folder-item:hover .folder-item-icon { opacity: 1; }
-.folder-item.active .folder-item-icon { opacity: 1; color: #ffffff; }
-.folder-item-label { flex: 1; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.folder-chip-icon { flex-shrink: 0; display: flex; align-items: center; opacity: 0.7; }
+.folder-chip:hover .folder-chip-icon, .folder-chip.active .folder-chip-icon { opacity: 1; }
+.folder-chip-label { white-space: nowrap; }
 
-/* Always at least partly visible (not hover-only) so touch users can
-   find these without a hover state — full opacity on hover/focus. */
-.folder-delete-btn {
-  opacity: 0.55;
-  width: 20px;
-  height: 20px;
+.folder-chip-delete {
+  width: 18px;
+  height: 18px;
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--error);
+  color: inherit;
+  opacity: 0.6;
   transition: var(--transition);
   flex-shrink: 0;
 }
 
-.folder-item:hover .folder-delete-btn,
-.folder-delete-btn:focus-visible { opacity: 1; }
-.folder-delete-btn:hover { background: rgba(239, 68, 68, 0.2); }
-
-/* Project rename button */
-.project-rename-btn {
-  opacity: 0.55;
-  width: 20px;
-  height: 20px;
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(255, 255, 255, 0.5);
-  transition: var(--transition);
-  flex-shrink: 0;
-}
-
-.folder-item:hover .project-rename-btn,
-.project-rename-btn:focus-visible { opacity: 1; }
-.project-rename-btn:hover { background: rgba(255, 255, 255, 0.1); color: #ffffff; }
-
-.project-delete-btn {
-  opacity: 0.55;
-  width: 20px;
-  height: 20px;
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--error);
-  transition: var(--transition);
-  flex-shrink: 0;
-}
-
-.folder-item:hover .project-delete-btn,
-.project-delete-btn:focus-visible { opacity: 1; }
-.project-delete-btn:hover { background: rgba(239, 68, 68, 0.2); }
+.folder-chip-delete:hover { opacity: 1; background: rgba(239, 68, 68, 0.25); color: var(--error); }
 
 /* Sidebar footer — storage info */
 .sidebar-footer {
@@ -1102,6 +925,13 @@ body.sidebar-open .sidebar {
   display: none;
 }
 
+/* Confirmation dialogs can be triggered from inside an already-open modal
+   (e.g. deleting a task from within an open note or project modal) — it
+   must always render above other modals regardless of DOM order. */
+#confirm-modal {
+  z-index: 1600;
+}
+
 .modal.modal-closing {
   pointer-events: none;
   animation: modalFadeOut 0.15s var(--ease) forwards;
@@ -1398,15 +1228,15 @@ body.sidebar-open .sidebar {
 #app-nav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
   padding: 0 10px;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: 12px;
+  padding: 12px 14px;
   border-radius: var(--radius-sm);
   font-size: 14px;
   font-weight: 700;
@@ -1794,6 +1624,170 @@ body.sidebar-open .sidebar {
 }
 
 /* ============================================================
+   24a-b. Notes — Editor body (checklist + textarea side by side)
+   ============================================================ */
+.note-editor-body {
+  flex: 1;
+  display: flex;
+  gap: 20px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.note-checklist {
+  width: 260px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-right: 2px dashed var(--border);
+  padding-right: 20px;
+  min-height: 0;
+}
+
+.note-checklist-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.note-checklist-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.note-checklist-title svg {
+  color: var(--accent);
+}
+
+.note-checklist-count {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.note-checklist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.note-checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+  box-shadow: var(--shadow-card);
+}
+
+.note-checklist-item:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 #1c1c1c;
+}
+
+.note-checklist-item.completed .note-checklist-item-label {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+.note-checklist-item-checkbox {
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: var(--transition);
+  flex-shrink: 0;
+  background: var(--bg-card);
+  cursor: pointer;
+}
+
+.note-checklist-item-checkbox:hover {
+  background: var(--bg-card-hover);
+  color: var(--accent);
+}
+
+.note-checklist-item.completed .note-checklist-item-checkbox {
+  background: var(--success);
+  border-color: var(--success);
+  color: #ffffff;
+}
+
+.note-checklist-item-label {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-primary);
+  word-break: break-word;
+  font-weight: 700;
+}
+
+.note-checklist-item-delete {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+
+.note-checklist-item-delete:hover {
+  color: var(--error);
+  background: var(--error-bg);
+}
+
+.note-checklist-add-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--bg-input);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.note-checklist-add-row svg {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.note-checklist-add-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  padding: 4px 0;
+}
+
+.note-checklist-add-input::placeholder {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* ============================================================
    25. Tasks — Input Bar
    ============================================================ */
 .task-input-bar {
@@ -1829,75 +1823,110 @@ body.sidebar-open .sidebar {
 }
 
 /* ============================================================
-   26. Tasks — Toolbar (Filters + Stats)
+   26. Tasks — Group Grid (by project)
    ============================================================ */
-.task-toolbar {
+.task-group-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.task-group-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: var(--transition-slow);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+}
+
+.task-group-card:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 #1c1c1c;
+}
+
+.task-group-card.empty {
+  opacity: 0.55;
+}
+
+.task-group-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 8px 0 16px;
-  gap: 12px;
-  flex-wrap: wrap;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-.task-filters {
-  display: flex;
-  gap: 0;
-  background: var(--bg-input);
-  border: 2px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 0;
-  overflow: hidden;
-}
+.task-group-project .task-group-icon { background: rgba(124, 58, 237, 0.1); color: var(--accent); }
+.task-group-uncategorized .task-group-icon { background: var(--bg-input); color: var(--text-muted); }
 
-.task-filter-btn {
-  padding: 8px 16px;
-  font-size: 12px;
+.task-group-title {
+  font-size: 15px;
   font-weight: 700;
-  color: #555555;
-  border-right: 1px solid var(--border);
-  transition: var(--transition);
+  color: var(--text-primary);
 }
 
-.task-filter-btn:last-child {
-  border-right: none;
-}
-
-.task-filter-btn:hover {
-  color: var(--text-secondary);
-  background: var(--bg-card-hover);
-}
-
-.task-filter-btn.active {
-  background: var(--accent);
-  color: #ffffff;
-}
-
-.task-stats {
-  font-size: 13px;
+.task-group-count {
+  font-size: 12px;
   color: var(--text-muted);
   font-weight: 700;
 }
 
+.task-group-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  margin: -8px -8px -2px 0;
+}
+
+.task-group-rename-btn, .task-group-delete-btn {
+  opacity: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: var(--transition);
+}
+
+.task-group-card:hover .task-group-rename-btn,
+.task-group-card:hover .task-group-delete-btn {
+  opacity: 1;
+}
+
+.task-group-rename-btn:hover { background: var(--bg-card-hover); color: var(--accent); }
+.task-group-delete-btn:hover { background: var(--error-bg); color: var(--error); }
+
 /* ============================================================
-   27. Tasks — List
+   27. Tasks — Compact List (used inside a group modal)
    ============================================================ */
 .task-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 
 .task-row {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
+  gap: 10px;
+  padding: 10px 12px;
   background: var(--bg-card);
   border: 2px solid var(--border);
   border-radius: var(--radius-sm);
-  transition: var(--transition);
+  transition: var(--transition-slow);
   box-shadow: var(--shadow-card);
+  box-sizing: border-box;
 }
 
 .task-row:hover {
@@ -1911,8 +1940,8 @@ body.sidebar-open .sidebar {
 }
 
 .task-checkbox {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border: 2px solid var(--border);
   border-radius: var(--radius-sm);
   display: flex;
@@ -1937,32 +1966,42 @@ body.sidebar-open .sidebar {
 
 .task-label {
   flex: 1;
+  min-width: 0;
   font-size: 14px;
+  font-weight: 700;
   color: var(--text-primary);
   word-break: break-word;
+  line-height: 1.4;
+}
+
+.task-project-badge, .task-due-badge, .task-note-badge {
+  font-size: 11px;
   font-weight: 700;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .task-project-badge {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  background: rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  color: var(--text-secondary);
-  white-space: nowrap;
-  flex-shrink: 0;
+  background: rgba(124, 58, 237, 0.08);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  color: var(--accent);
+}
+
+.task-note-badge {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: #10b981;
 }
 
 .task-due-badge {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  background: rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  color: var(--text-secondary);
-  white-space: nowrap;
-  flex-shrink: 0;
+  background: rgba(255, 165, 0, 0.08);
+  border: 1px solid rgba(255, 165, 0, 0.2);
+  color: #f59e0b;
 }
 
 .task-due-badge.overdue {
@@ -1973,8 +2012,8 @@ body.sidebar-open .sidebar {
 
 .task-delete-btn {
   opacity: 0;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
@@ -1998,36 +2037,124 @@ body.sidebar-open .sidebar {
 }
 
 /* ============================================================
+   27b. Tasks — Group Modal
+   ============================================================ */
+.task-group-modal-card {
+  max-width: 520px;
+  width: 90%;
+  height: 70vh;
+  max-height: 600px;
+  padding: 0 !important;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.task-group-editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 28px 28px;
+  overflow-y: auto;
+  gap: 16px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.task-group-editor-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.task-group-editor-title {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.task-group-editor-count {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.task-group-list {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.task-group-list .task-list { gap: 8px; }
+
+.task-group-add-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--bg-input);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.task-group-add-row svg { color: var(--text-muted); flex-shrink: 0; }
+
+.task-group-add-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  padding: 4px 0;
+}
+
+.task-group-add-input::placeholder { color: var(--text-muted); font-weight: 400; }
+
+/* ============================================================
    28. Sidebar Expand Tab (visible when sidebar is collapsed)
    ============================================================ */
 .sidebar-expand-tab {
   position: fixed;
-  top: var(--topbar-height);
-  left: 0;
-  width: 20px;
-  height: 48px;
+  top: calc(var(--topbar-height) / 2);
+  left: 14px;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
   display: none;
   align-items: center;
   justify-content: center;
   background: var(--bg-card);
   border: 2px solid var(--border);
-  border-left: none;
+  border-radius: var(--radius-sm);
   z-index: 90;
   cursor: pointer;
   color: var(--text-secondary);
   transition: var(--transition);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-card);
 }
 
 .sidebar-expand-tab:hover {
   background: var(--lime);
   color: var(--text-inverse);
   border-color: var(--text-primary);
+  transform: translateY(-50%) translate(2px, 2px);
+  box-shadow: 2px 2px 0 #1c1c1c;
 }
 
 @media (min-width: 769px) {
   body:not(.sidebar-open) .sidebar-expand-tab {
     display: flex;
+  }
+
+  /* Reserve room in the top bar so its content doesn't sit under the tab */
+  body:not(.sidebar-open) .top-bar {
+    padding-left: 62px;
   }
 }
 
@@ -2162,25 +2289,38 @@ body.sidebar-open .sidebar {
 }
 
 .notes-list-panel {
-  width: 40%;
-  min-width: 280px;
-  max-width: 400px;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
   overflow-y: auto;
-  border-right: 2px solid var(--border);
+  border-right: none;
   padding: 20px 20px 24px;
 }
 
 .notes-list-panel .notes-grid {
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+
+.note-editor-modal-card {
+  max-width: 800px;
+  width: 90%;
+  height: 85vh;
+  max-height: 700px;
+  padding: 0 !important;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .note-editor {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 20px 24px 24px;
-  overflow: hidden;
-  gap: 12px;
+  padding: 24px 28px 28px;
+  overflow-y: auto;
+  gap: 16px;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 /* Mobile: full-screen editor overlay */
@@ -2196,17 +2336,48 @@ body.sidebar-open .sidebar {
     border-right: none;
   }
 
+  .note-editor-modal-card {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    border-radius: 0;
+    border: none;
+  }
+
   .note-editor {
-    position: fixed;
-    inset: 0;
-    z-index: 100;
-    background: var(--bg-base);
     padding: 16px;
     border: none;
   }
 
   .note-editor-header {
     padding-right: 0;
+  }
+
+  .note-editor-body {
+    flex-direction: column;
+    overflow: visible;
+  }
+
+  .note-checklist {
+    width: 100%;
+    max-height: 45%;
+    border-right: none;
+    border-bottom: 2px dashed var(--border);
+    padding-right: 0;
+    padding-bottom: 16px;
+  }
+
+  .task-group-modal-card {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    border-radius: 0;
+    border: none;
+  }
+
+  .task-group-editor {
+    padding: 16px;
+    border: none;
   }
 }
 

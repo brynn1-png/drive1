@@ -117,6 +117,9 @@ const App = {
     this._initControls();
     Upload.init();
     await Projects.load();
+    // Preloaded (not just on-visit) so Tasks can resolve note badges
+    // even if the user hasn't opened the Notes tab this session.
+    await Notes.load();
 
     await this.refresh();
   },
@@ -164,11 +167,6 @@ const App = {
       Folders.showCreateModal();
     });
 
-    // New project button
-    document.getElementById('new-project-btn').addEventListener('click', () => {
-      Projects.showCreateModal();
-    });
-
     // Sidebar collapse toggle
     const collapseBtn = document.getElementById('sidebar-collapse-btn');
     const expandTab = document.getElementById('sidebar-expand-tab');
@@ -176,28 +174,6 @@ const App = {
     if (collapseBtn) collapseBtn.addEventListener('click', () => this.toggleSidebar());
     if (expandTab) expandTab.addEventListener('click', () => this.toggleSidebar());
     if (backdrop) backdrop.addEventListener('click', () => this.closeSidebar());
-
-    // Collapsible sidebar sections
-    document.querySelectorAll('.sidebar-section-toggle').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const group = btn.closest('.sidebar-section-group');
-        const section = btn.dataset.section;
-        group.classList.toggle('collapsed');
-        btn.setAttribute('aria-expanded', !group.classList.contains('collapsed'));
-        localStorage.setItem(`sidebar-${section}-collapsed`, group.classList.contains('collapsed'));
-      });
-    });
-
-    // Restore section collapse state from localStorage
-    ['folders', 'projects'].forEach((section) => {
-      const collapsed = localStorage.getItem(`sidebar-${section}-collapsed`) === 'true';
-      const group = document.getElementById(`${section}-section`);
-      if (group && collapsed) {
-        group.classList.add('collapsed');
-        const toggle = group.querySelector('.sidebar-section-toggle');
-        if (toggle) toggle.setAttribute('aria-expanded', 'false');
-      }
-    });
 
     // 3D theme toggle
     const themeToggle = document.getElementById('theme-toggle-checkbox');
@@ -207,6 +183,44 @@ const App = {
         const enabled = themeToggle.checked;
         document.documentElement.classList.toggle('theme-3d', enabled);
         localStorage.setItem('ui-theme', enabled ? '3d' : 'classic');
+      });
+    }
+
+    // Color scheme picker — hover/focus previews a palette app-wide,
+    // click/Enter commits it to localStorage
+    const palettePicker = document.getElementById('palette-picker');
+    if (palettePicker) {
+      const swatches = Array.from(palettePicker.querySelectorAll('.palette-swatch'));
+      const allPaletteClasses = swatches.map((s) => `palette-${s.dataset.palette}`);
+      let committed = localStorage.getItem('ui-palette') || 'classic';
+      if (!swatches.some((s) => s.dataset.palette === committed)) committed = 'classic';
+
+      const applyPalette = (palette) => {
+        document.documentElement.classList.remove(...allPaletteClasses);
+        document.documentElement.classList.add(`palette-${palette}`);
+      };
+
+      const markActive = (palette) => {
+        swatches.forEach((s) => s.setAttribute('aria-checked', String(s.dataset.palette === palette)));
+      };
+
+      applyPalette(committed);
+      markActive(committed);
+
+      swatches.forEach((swatch) => {
+        const preview = () => applyPalette(swatch.dataset.palette);
+        const restore = () => applyPalette(committed);
+
+        swatch.addEventListener('mouseenter', preview);
+        swatch.addEventListener('mouseleave', restore);
+        swatch.addEventListener('focus', preview);
+        swatch.addEventListener('blur', restore);
+        swatch.addEventListener('click', () => {
+          committed = swatch.dataset.palette;
+          localStorage.setItem('ui-palette', committed);
+          applyPalette(committed);
+          markActive(committed);
+        });
       });
     }
 
@@ -290,6 +304,12 @@ const App = {
     const newTaskBtn = document.getElementById('new-task-btn');
     if (newTaskBtn) {
       newTaskBtn.addEventListener('click', () => Tasks.showCreateModal());
+    }
+
+    // New project button (Tasks view header)
+    const newProjectFromTasksBtn = document.getElementById('new-project-from-tasks-btn');
+    if (newProjectFromTasksBtn) {
+      newProjectFromTasksBtn.addEventListener('click', () => Projects.showCreateModal());
     }
   },
 

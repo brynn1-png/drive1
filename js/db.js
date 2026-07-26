@@ -230,13 +230,17 @@ const DB = {
   /*  TASKS                                                               */
   /* ------------------------------------------------------------------ */
 
-  async getTasks({ projectId = null, filter = 'all' } = {}) {
+  async getTasks({ projectId = null, noteId = null, filter = 'all' } = {}) {
     let query = supabaseClient.from('tasks').select('*').eq('user_id', this._uid());
 
     if (projectId === 'uncategorized') {
       query = query.is('project_id', null);
     } else if (projectId) {
       query = query.eq('project_id', projectId);
+    }
+
+    if (noteId) {
+      query = query.eq('note_id', noteId);
     }
 
     if (filter === 'active') {
@@ -252,10 +256,11 @@ const DB = {
     return data || [];
   },
 
-  async insertTask(title, projectId = null, dueDate = null) {
+  async insertTask(title, projectId = null, dueDate = null, noteId = null) {
     const row = { title, user_id: this._uid() };
     if (projectId) row.project_id = projectId;
     if (dueDate) row.due_date = dueDate;
+    if (noteId) row.note_id = noteId;
 
     const { data, error } = await supabaseClient
       .from('tasks')
