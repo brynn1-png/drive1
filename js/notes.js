@@ -123,6 +123,8 @@ const Notes = {
       backBtn.onclick = () => this.closeNote();
     }
 
+    editor.onclick = (e) => { if (e.target === editor) this.closeNote(); };
+
     if (pinBtn) {
       pinBtn.onclick = () => this.togglePin(id);
       pinBtn.classList.toggle('active', note.pinned);
@@ -141,6 +143,7 @@ const Notes = {
     this._activeNoteId = null;
     clearTimeout(this._saveTimer);
     document.getElementById('note-editor-modal').classList.add('hidden');
+    this.render();
   },
 
   async createNote() {
@@ -167,6 +170,8 @@ const Notes = {
       try {
         const note = await DB.insertNote({ title, content: '' });
         this._notes.unshift(note);
+        this.render();
+        this._updateCount();
         this.openNote(note.id);
         Toast.show('Note created.', 'success');
       } catch (err) {

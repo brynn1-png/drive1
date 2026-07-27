@@ -294,4 +294,29 @@ const DB = {
 
     if (error) throw new Error(`DB.deleteTask: ${error.message}`);
   },
+
+  /* ------------------------------------------------------------------ */
+  /*  ADMIN                                                               */
+  /* ------------------------------------------------------------------ */
+
+  async isAdmin() {
+    const { data, error } = await supabaseClient
+      .from('admins')
+      .select('user_id')
+      .eq('user_id', this._uid())
+      .maybeSingle();
+
+    if (error) throw new Error(`DB.isAdmin: ${error.message}`);
+    return !!data;
+  },
+
+  async getAllProfiles() {
+    const { data, error } = await supabaseClient
+      .from('profiles')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw new Error(`DB.getAllProfiles: ${error.message}`);
+    return data || [];
+  },
 };

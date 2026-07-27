@@ -458,6 +458,7 @@ const App = {
     // Load data for the view
     if (view === 'notes') Notes.load();
     if (view === 'tasks') Tasks.load();
+    if (view === 'settings') Admin.load();
   },
 
   /* ------------------------------------------------------------------ */

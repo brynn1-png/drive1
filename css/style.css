@@ -1386,6 +1386,11 @@ body.sidebar-open .sidebar {
 /* ============================================================
    22b. Settings View
    ============================================================ */
+#settings-container {
+  columns: 400px;
+  column-gap: 20px;
+}
+
 .settings-section {
   background: var(--bg-card);
   border: 2px solid var(--border);
@@ -1393,7 +1398,14 @@ body.sidebar-open .sidebar {
   box-shadow: var(--shadow-card);
   padding: 24px;
   margin-bottom: 20px;
-  max-width: 560px;
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+}
+
+@media (max-width: 768px) {
+  #settings-container {
+    columns: 1;
+  }
 }
 
 .settings-section-title {
@@ -1421,6 +1433,35 @@ body.sidebar-open .sidebar {
   color: var(--text-muted);
   margin-top: 2px;
   max-width: 360px;
+}
+
+.admin-user-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+
+.admin-user-row:first-child {
+  border-top: none;
+}
+
+.admin-user-email {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-user-date {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 700;
+  flex-shrink: 0;
 }
 
 .settings-form {

@@ -1,3 +1,11 @@
+---
+title: MyDrive — Original Build Plan
+tags: [mydrive, planning, historical]
+aliases: [plan]
+---
+
+> [!note] This is the original planning doc. For the current state of the system, see [[SYSTEM_OVERVIEW]].
+
 Architecture
 HTML/CSS/JS
       │

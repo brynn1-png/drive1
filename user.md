@@ -1,3 +1,11 @@
+---
+title: Multi-User Authentication & Per-User Data Isolation Plan
+tags: [mydrive, planning, auth, historical]
+aliases: [user]
+---
+
+> [!note] This is the original design doc for adding auth. It shipped — see [[SYSTEM_OVERVIEW]] for the current data model and RLS setup.
+
 # Plan: Multi-User Authentication & Per-User Data Isolation
 
 ## Overview

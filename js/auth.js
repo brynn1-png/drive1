@@ -189,7 +189,6 @@ const Auth = {
     const signupOk = document.getElementById('signup-success-ok');
     if (signupOk) signupOk.addEventListener('click', () => {
       this._hideModal('signup-success-modal');
-      this._mode = 'signin';
       this._toggleMode();
     });
   },
