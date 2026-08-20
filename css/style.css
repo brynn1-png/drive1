@@ -1709,6 +1709,42 @@ body.sidebar-open .sidebar {
   color: var(--accent);
 }
 
+/* Shared files in the All Files grid/list (mirrors shared note cards) */
+.file-card.shared {
+  border-style: dashed;
+  opacity: 0.85;
+}
+
+.file-card.shared:hover {
+  opacity: 1;
+}
+
+.file-card-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  letter-spacing: 0.3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  margin-bottom: 4px;
+}
+
+.list-row.shared {
+  background: rgba(200, 255, 0, 0.04);
+}
+
+.list-shared-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  letter-spacing: 0.3px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
 /* ============================================================
    24. Notes — Editor
    ============================================================ */

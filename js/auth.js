@@ -3,25 +3,16 @@ const Auth = {
   _session: null,
   _resolveInit: null,
   _mode: 'signin',
+  _isRecoveryFlow: false,
 
   async init() {
     return new Promise(async (resolve) => {
       this._resolveInit = resolve;
       this._wireEvents();
 
-      const { data: { session }, error } = await supabaseClient.auth.getSession();
-      if (error) console.error('Auth.init:', error.message);
-
-      if (session) {
-        this._session = session;
-        this._user = session.user;
-        this._updateSidebarUser();
-        this.hideLoginScreen();
-        resolve();
-      } else {
-        this.showLoginScreen();
-      }
-
+      // IMPORTANT: register the listener BEFORE getSession(), otherwise the
+      // PASSWORD_RECOVERY event from a reset-link redirect can fire before we
+      // subscribe and the "set new password" screen never shows.
       supabaseClient.auth.onAuthStateChange((event, session) => {
         if (event === 'SIGNED_IN' && session) {
           this._session = session;
@@ -41,9 +32,25 @@ const Auth = {
         if (event === 'PASSWORD_RECOVERY' && session) {
           this._session = session;
           this._user = session.user;
+          this._isRecoveryFlow = true;
           this._showResetConfirmScreen();
         }
       });
+
+      const { data: { session }, error } = await supabaseClient.auth.getSession();
+      if (error) console.error('Auth.init:', error.message);
+
+      if (session) {
+        this._session = session;
+        this._user = session.user;
+        this._updateSidebarUser();
+        if (!this._isRecoveryFlow) {
+          this.hideLoginScreen();
+        }
+        resolve();
+      } else {
+        this.showLoginScreen();
+      }
     });
   },
 

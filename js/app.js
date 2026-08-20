@@ -383,12 +383,42 @@ const App = {
     const { searchQuery, currentFolder, sortBy, sortOrder } = this.state;
     // When searching, look across all folders
     const folderFilter = (searchQuery.trim() || currentFolder === 'root') ? '__all__' : currentFolder;
-    this.state.files = await DB.getFiles({
+    let files = await DB.getFiles({
       folder:    folderFilter,
       search:    searchQuery,
       sortBy,
       sortOrder,
     });
+
+    // Merge files shared with me into the list (only at the root / search
+    // level — inside a folder only your own files are shown). Mirrors how
+    // shared notes appear in the Notes grid.
+    if (folderFilter === '__all__') {
+      const [sharedFiles, users] = await Promise.all([
+        DB.getSharedFilesWithMe(),
+        DB.getUsers(),
+      ]);
+      for (const share of sharedFiles) {
+        const f = share.files || {};
+        const sender = users.find((u) => u.id === share.owner_user_id);
+        const filename = f.filename || 'Untitled';
+        if (searchQuery.trim() && !filename.toLowerCase().includes(searchQuery.trim().toLowerCase())) continue;
+        files.push({
+          id: share.file_id,
+          filename,
+          storage_path: f.storage_path,
+          size: f.size || 0,
+          file_type: f.file_type || 'application/octet-stream',
+          folder: null,
+          created_at: share.created_at,
+          _isShared: true,
+          _sharedBy: sender ? sender.email : 'someone',
+          _permission: share.permission || 'view',
+        });
+      }
+    }
+
+    this.state.files = files;
   },
 
   async _loadFolders() {

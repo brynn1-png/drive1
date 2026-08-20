@@ -54,7 +54,7 @@ const Gallery = {
     const publicUrl = Storage.getPublicUrl(file.storage_path);
 
     const card = document.createElement('div');
-    card.className = 'file-card';
+    card.className = 'file-card' + (file._isShared ? ' shared' : '');
     card.dataset.id = file.id;
 
     const preview = document.createElement('div');
@@ -82,6 +82,7 @@ const Gallery = {
     const info = document.createElement('div');
     info.className = 'file-card-info';
     info.innerHTML = `
+      ${file._isShared ? `<div class="file-card-badge shared-badge">Shared by ${this._esc((file._sharedBy || 'someone').split('@')[0])}</div>` : ''}
       <div class="file-card-name" title="${this._esc(file.filename)}">${this._esc(file.filename)}</div>
       <div class="file-card-meta">
         <span>${this._formatSize(file.size)}</span>
@@ -91,12 +92,20 @@ const Gallery = {
 
     const actions = document.createElement('div');
     actions.className = 'file-card-actions';
-    actions.innerHTML = `
+    if (file._isShared) {
+      // Shared files: recipients can preview/open/download; owners of the
+      // share can't move or delete the original.
+      actions.innerHTML = `
+        <button class="action-btn" title="Download" data-action="download" data-id="${file.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+      `;
+    } else {
+      actions.innerHTML = `
       ${isPdf ? `<button class="action-btn" title="Open" data-action="open" data-id="${file.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></button>` : ''}
       <button class="action-btn" title="Download" data-action="download" data-id="${file.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
       <button class="action-btn" title="Move to folder" data-action="move" data-id="${file.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg></button>
       <button class="action-btn danger" title="Delete" data-action="delete" data-id="${file.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
     `;
+    }
 
     card.appendChild(preview);
     card.appendChild(info);
@@ -131,7 +140,7 @@ const Gallery = {
     const publicUrl = Storage.getPublicUrl(file.storage_path);
 
     const row = document.createElement('div');
-    row.className = 'list-row';
+    row.className = 'list-row' + (file._isShared ? ' shared' : '');
     row.dataset.id = file.id;
 
     row.innerHTML = `
@@ -140,6 +149,7 @@ const Gallery = {
       </div>
       <div class="list-col col-name">
         <span class="list-filename" title="${this._esc(file.filename)}">${this._esc(file.filename)}</span>
+        ${file._isShared ? `<span class="list-shared-badge shared-badge">Shared by ${this._esc((file._sharedBy || 'someone').split('@')[0])}</span>` : ''}
       </div>
       <div class="list-col col-size">${this._formatSize(file.size)}</div>
       <div class="list-col col-type">${this._getTypeLabel(file.file_type)}</div>
@@ -148,8 +158,9 @@ const Gallery = {
         <button class="action-btn" title="Download" data-action="download" data-id="${file.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
         ${isImage ? `<button class="action-btn" title="Preview" data-action="preview" data-id="${file.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>` : ''}
         ${isPdf ? `<button class="action-btn" title="Open" data-action="open" data-id="${file.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></button>` : ''}
+        ${file._isShared ? '' : `
         <button class="action-btn" title="Move to folder" data-action="move" data-id="${file.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg></button>
-        <button class="action-btn danger" title="Delete" data-action="delete" data-id="${file.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+        <button class="action-btn danger" title="Delete" data-action="delete" data-id="${file.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>`}
       </div>
     `;
 
