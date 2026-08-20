@@ -53,6 +53,7 @@ Auth + Storage). No backend server, no build step, no framework.
   - [[notes.js]] — Notes feature (CRUD + auto-save editor)
   - [[tasks.js]] — Tasks feature, grouped by project
   - [[projects.js]] — project CRUD (used by tasks.js)
+  - [[share.js]] — Share view: pick own notes + registered users to share (single/batch), revoke, and read "shared with me"
   - [[admin.js]] — admin-only "registered users" panel (Settings)
   - [[confirm.js]] — reusable confirm/alert modal helper
 - [[schema.sql]] — full current schema, hand-maintained (source of truth to eyeball)
@@ -63,6 +64,7 @@ Auth + Storage). No backend server, no build step, no framework.
   - [[004_add_pinned_to_notes.sql]] — `notes.pinned`
   - [[005_add_note_id_to_tasks.sql]] — `tasks.note_id`
   - [[006_add_admin.sql]] — `profiles`, `admins`, the signup trigger
+  - [[007_note_shares.sql]] — `note_shares` + note sharing RLS; opens `profiles` to all authenticated users
 
 Migrations are **not applied automatically** — there's no CLI/CI wiring. Any new
 `NNN_*.sql` file must be pasted into the Supabase Dashboard → SQL Editor and run by hand.
@@ -79,6 +81,7 @@ have RLS enabled with `select/insert/update/delete` policies scoped to `auth.uid
 | `notes` | notes | `title`, `content`, `pinned`, `updated_at` | [[schema.sql]] / [[004_add_pinned_to_notes.sql]] |
 | `tasks` | to-dos | `title`, `completed`, `due_date`, `project_id` (FK), `note_id` (FK) | [[schema.sql]] / [[002_add_projects.sql]] / [[005_add_note_id_to_tasks.sql]] |
 | `projects` | task groupings | `name` (unique per user) | [[002_add_projects.sql]] |
+| `note_shares` | read-access grants for notes | `note_id` (FK), `owner_user_id`, `shared_with_user_id` (unique pair) | [[007_note_shares.sql]] |
 | `profiles` | mirrors `auth.users(id, email)` into `public` so it's queryable via RLS | `email`, `created_at`; kept in sync by an `on_auth_user_created` trigger | [[006_add_admin.sql]] |
 | `admins` | allow-list of user IDs with elevated read access | `user_id`; **no insert/update/delete policy** — only editable from the SQL Editor / service role, so a client can never self-promote | [[006_add_admin.sql]] |
 
@@ -97,6 +100,12 @@ work for previews); `files.storage_path` points into it.
   `tasks.note_id`).
 - **Tasks** ([[tasks.js]]): grouped by project ([[projects.js]]); project cards double
   as rename/delete entry points.
+- **Share** ([[share.js]]): pick one or more of your notes and one or more registered
+  users to share them with (single or batch); see who each note is shared with and
+  revoke; a "Shared with me" section shows notes others shared with you, read-only.
+  Recipients are picked from `profiles` (readable by all authenticated users since
+  [[007_note_shares.sql]]). RLS keeps the note owner as the only writer — recipients
+  can read but never edit, pin, or delete the note.
 - **Settings**: appearance (theme + color palette), storage usage meter, change
   password ([[auth.js]]), admin panel (if applicable), sign out.
 - **Admin panel** ([[admin.js]]): visible only to accounts listed in the `admins`
@@ -129,6 +138,13 @@ work for previews); `files.storage_path` points into it.
 
 - [[006_add_admin.sql]] must be run manually in the Supabase SQL Editor before the
   admin panel will work in a given environment.
+- [[007_note_shares.sql]] must be run manually too — until it's applied, the Share
+  page will show "Failed to load shares" because `note_shares` doesn't exist yet.
+- Opening `profiles` to all authenticated users (for the Share picker) means every
+  registered user's email is visible to every signed-in user. Fine for a trusted
+  personal app; revisit with a narrower search RPC if that ever becomes a concern.
+- Shared notes are read-only and viewed inline in the Share page; opening them in
+  the full note editor (with the checklist) is a possible follow-up.
 - Storage bucket is public — fine for a personal/trusted-user app, but would need
   private buckets + signed URLs if this ever needs to keep files confidential from
   other authenticated users.

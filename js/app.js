@@ -69,7 +69,7 @@ function friendlyError(err) {
 const App = {
   state: {
     currentFolder: 'root',
-    currentView:   'files', // 'files' | 'notes' | 'tasks' | 'settings'
+    currentView:   'files', // 'files' | 'notes' | 'tasks' | 'share' | 'settings'
     searchQuery:   '',
     sortBy:        'created_at',
     sortOrder:     'desc',
@@ -451,6 +451,7 @@ const App = {
     document.getElementById('files-view-wrapper').classList.toggle('hidden', !isFiles);
     document.getElementById('notes-view').classList.toggle('hidden', view !== 'notes');
     document.getElementById('tasks-view').classList.toggle('hidden', view !== 'tasks');
+    document.getElementById('share-view').classList.toggle('hidden', view !== 'share');
     document.getElementById('settings-view').classList.toggle('hidden', view !== 'settings');
 
     this.closeSidebar();
@@ -458,6 +459,7 @@ const App = {
     // Load data for the view
     if (view === 'notes') Notes.load();
     if (view === 'tasks') Tasks.load();
+    if (view === 'share') Share.load();
     if (view === 'settings') Admin.load();
   },
 

@@ -6,6 +6,8 @@
 
 const Notes = {
   _notes: [],
+  _sharedNotes: [],
+  _users: [],
   _activeNoteId: null,
   _saveTimer: null,
 
@@ -18,7 +20,14 @@ const Notes = {
     if (container) {
       container.innerHTML = '<div class="loading-state"><div class="spinner" aria-hidden="true"></div><div>Loading your notes...</div></div>';
     }
-    this._notes = await DB.getNotes();
+    const [notes, shared, users] = await Promise.all([
+      DB.getNotes(),
+      DB.getSharedWithMe(),
+      DB.getUsers(),
+    ]);
+    this._notes = notes;
+    this._sharedNotes = shared;
+    this._users = users;
     this.render();
     this._updateCount();
   },
@@ -29,7 +38,9 @@ const Notes = {
 
     container.innerHTML = '';
 
-    if (this._notes.length === 0) {
+    const allNotes = this._notes.length + this._sharedNotes.length;
+
+    if (allNotes === 0) {
       container.innerHTML = `
         <div class="empty-state">
           <div class="empty-icon">
@@ -50,40 +61,23 @@ const Notes = {
     grid.className = 'notes-grid';
 
     for (const note of this._notes) {
-      const card = document.createElement('div');
-      card.className = 'note-card';
-      card.dataset.id = note.id;
+      grid.appendChild(this._noteCard(note, false));
+    }
 
-      const title = this._esc(note.title || 'Untitled');
-      const snippet = this._esc((note.content || 'Empty note').slice(0, 120));
-      const date = this._formatDate(note.updated_at || note.created_at);
-      const pinnedClass = note.pinned ? ' pinned' : '';
-      const pinIcon = note.pinned
-        ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L8 10H3l5 4-2 8 6-5 6 5-2-8 5-4h-5z"/></svg>'
-        : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L8 10H3l5 4-2 8 6-5 6 5-2-8 5-4h-5z"/></svg>';
-
-      card.className = `note-card${pinnedClass}`;
-      card.dataset.id = note.id;
-
-      card.innerHTML = `
-        <div class="note-card-actions-row">
-          <button class="note-card-pin${note.pinned ? ' active' : ''}" data-action="pin-note" data-id="${note.id}" title="${note.pinned ? 'Unpin note' : 'Pin to top'}">${pinIcon}</button>
-          <button class="note-card-delete" data-action="delete-note" data-id="${note.id}" title="Delete note">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-        </div>
-        <div class="note-card-title">${title}</div>
-        <div class="note-card-snippet">${snippet}</div>
-        <div class="note-card-footer">
-          <span class="note-card-date">${date}</span>
-        </div>`;
-
-      card.addEventListener('click', (e) => {
-        if (e.target.closest('[data-action]')) return;
-        this.openNote(note.id);
-      });
-
-      grid.appendChild(card);
+    for (const share of this._sharedNotes) {
+      const note = share.notes || {};
+      const sender = this._users.find((u) => u.id === share.owner_user_id);
+      const sharedNote = {
+        id: share.note_id,
+        title: note.title || 'Untitled',
+        content: note.content || '',
+        updated_at: note.updated_at,
+        created_at: share.created_at,
+        _isShared: true,
+        _sharedBy: sender ? sender.email : 'someone',
+        _permission: share.permission || 'view',
+      };
+      grid.appendChild(this._noteCard(sharedNote, true));
     }
 
     container.appendChild(grid);
@@ -101,6 +95,117 @@ const Notes = {
         this.togglePin(btn.dataset.id);
       });
     });
+  },
+
+  _noteCard(note, isShared) {
+    const card = document.createElement('div');
+    card.className = 'note-card' + (note.pinned && !isShared ? ' pinned' : '') + (isShared ? ' shared' : '');
+    card.dataset.id = note.id;
+
+    const title = this._esc(note.title || 'Untitled');
+    const snippet = this._esc((note.content || 'Empty note').slice(0, 120));
+    const date = this._formatDate(note.updated_at || note.created_at);
+    const pinIcon = note.pinned
+      ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L8 10H3l5 4-2 8 6-5 6 5-2-8 5-4h-5z"/></svg>'
+      : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L8 10H3l5 4-2 8 6-5 6 5-2-8 5-4h-5z"/></svg>';
+
+    let badgeHtml = '';
+    if (isShared) {
+      badgeHtml = `<div class="note-card-badge shared-badge">Shared by ${this._esc(note._sharedBy.split('@')[0])}</div>`;
+    } else {
+      const shareCount = this._getShareCount(note.id);
+      if (shareCount > 0) {
+        badgeHtml = `<div class="note-card-badge owned-badge">Shared with ${shareCount}</div>`;
+      }
+    }
+
+    card.innerHTML = `
+      ${isShared ? '' : `<div class="note-card-actions-row">
+        <button class="note-card-pin${note.pinned ? ' active' : ''}" data-action="pin-note" data-id="${note.id}" title="${note.pinned ? 'Unpin note' : 'Pin to top'}">${pinIcon}</button>
+        <button class="note-card-delete" data-action="delete-note" data-id="${note.id}" title="Delete note">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>`}
+      ${badgeHtml}
+      <div class="note-card-title">${title}</div>
+      <div class="note-card-snippet">${snippet}</div>
+      <div class="note-card-footer">
+        <span class="note-card-date">${date}</span>
+      </div>`;
+
+    if (!isShared) {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('[data-action]')) return;
+        this.openNote(note.id);
+      });
+    } else {
+      card.addEventListener('click', () => {
+        this._openSharedNote(note);
+      });
+    }
+
+    return card;
+  },
+
+  _getShareCount(noteId) {
+    if (typeof Share === 'undefined' || !Share._shares) return 0;
+    return Share._shares.filter((s) => s.note_id === noteId).length;
+  },
+
+  _openSharedNote(note) {
+    const modal = document.getElementById('note-editor-modal');
+    const titleInput = document.getElementById('note-title-input');
+    const textarea = document.getElementById('note-textarea');
+    const pinBtn = document.getElementById('note-pin-btn');
+    const backBtn = document.getElementById('note-back-btn');
+    const canEdit = note._permission === 'edit';
+
+    titleInput.value = note.title || '';
+    textarea.value = note.content || '';
+    textarea.readOnly = !canEdit;
+    titleInput.readOnly = !canEdit;
+
+    if (pinBtn) pinBtn.style.display = 'none';
+
+    const cleanup = () => {
+      modal.classList.add('hidden');
+      textarea.readOnly = false;
+      titleInput.readOnly = false;
+      if (pinBtn) pinBtn.style.display = '';
+      this._sharedSaveTimer = null;
+    };
+
+    if (backBtn) backBtn.onclick = cleanup;
+    modal.onclick = (e) => { if (e.target === modal) cleanup(); };
+
+    if (canEdit) {
+      let saveTimer = null;
+      const handler = () => {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => this._autoSaveSharedNote(note.id, titleInput.value, textarea.value), 500);
+      };
+      titleInput.oninput = handler;
+      textarea.oninput = handler;
+    } else {
+      titleInput.oninput = null;
+      textarea.oninput = null;
+    }
+
+    modal.classList.remove('hidden');
+    if (canEdit) textarea.focus();
+  },
+
+  async _autoSaveSharedNote(noteId, title, content) {
+    try {
+      await DB.updateSharedNote(noteId, { title: title.trim() || 'Untitled', content });
+      const status = document.getElementById('note-save-status');
+      if (status) {
+        status.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Saved';
+        status.classList.remove('saving');
+      }
+    } catch (err) {
+      console.error('Shared note auto-save failed:', err);
+    }
   },
 
   openNote(id) {

@@ -45,6 +45,17 @@ const DB = {
     return data || [];
   },
 
+  async getAllFiles() {
+    const { data, error } = await supabaseClient
+      .from('files')
+      .select('*')
+      .eq('user_id', this._uid())
+      .order('created_at', { ascending: false });
+
+    if (error) throw new Error(`DB.getAllFiles: ${error.message}`);
+    return data || [];
+  },
+
   async deleteFile(id) {
     const { error } = await supabaseClient
       .from('files')
@@ -164,6 +175,18 @@ const DB = {
       .single();
 
     if (error) throw new Error(`DB.updateNote: ${error.message}`);
+    return data;
+  },
+
+  async updateSharedNote(id, updates) {
+    const { data, error } = await supabaseClient
+      .from('notes')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw new Error(`DB.updateSharedNote: ${error.message}`);
     return data;
   },
 
@@ -318,5 +341,142 @@ const DB = {
 
     if (error) throw new Error(`DB.getAllProfiles: ${error.message}`);
     return data || [];
+  },
+
+  /* ------------------------------------------------------------------ */
+  /*  SHARING                                                            */
+  /* ------------------------------------------------------------------ */
+
+  async getUsers() {
+    const { data, error } = await supabaseClient
+      .from('profiles')
+      .select('id, email')
+      .neq('id', this._uid())
+      .order('email', { ascending: true });
+
+    if (error) throw new Error(`DB.getUsers: ${error.message}`);
+    return data || [];
+  },
+
+  async shareNotes(pairs) {
+    const uid = this._uid();
+    const unique = [];
+    const seen = new Set();
+    for (const pair of pairs) {
+      const key = `${pair.note_id}::${pair.shared_with_user_id}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push({ ...pair, owner_user_id: uid });
+      }
+    }
+    if (unique.length === 0) return;
+
+    const { error } = await supabaseClient
+      .from('note_shares')
+      .insert(unique);
+
+    if (error) throw new Error(`DB.shareNotes: ${error.message}`);
+  },
+
+  async getMyShares() {
+    const { data, error } = await supabaseClient
+      .from('note_shares')
+      .select('id, note_id, shared_with_user_id, permission, created_at')
+      .order('created_at', { ascending: false });
+
+    if (error) throw new Error(`DB.getMyShares: ${error.message}`);
+    return data || [];
+  },
+
+  async getSharedWithMe() {
+    const { data, error } = await supabaseClient
+      .from('note_shares')
+      .select('id, note_id, owner_user_id, permission, created_at, notes(title, content, updated_at)')
+      .eq('shared_with_user_id', this._uid())
+      .order('created_at', { ascending: false });
+
+    if (error) throw new Error(`DB.getSharedWithMe: ${error.message}`);
+    return data || [];
+  },
+
+  async updateSharePermission(shareId, permission) {
+    const { error } = await supabaseClient
+      .from('note_shares')
+      .update({ permission })
+      .eq('id', shareId);
+
+    if (error) throw new Error(`DB.updateSharePermission: ${error.message}`);
+  },
+
+  async revokeShare(shareId) {
+    const { error } = await supabaseClient
+      .from('note_shares')
+      .delete()
+      .eq('id', shareId);
+
+    if (error) throw new Error(`DB.revokeShare: ${error.message}`);
+  },
+
+  /* ------------------------------------------------------------------ */
+  /*  FILE SHARES                                                         */
+  /* ------------------------------------------------------------------ */
+
+  async shareFiles(pairs) {
+    const uid = this._uid();
+    const unique = [];
+    const seen = new Set();
+    for (const pair of pairs) {
+      const key = `${pair.file_id}::${pair.shared_with_user_id}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push({ ...pair, owner_user_id: uid });
+      }
+    }
+    if (unique.length === 0) return;
+
+    const { error } = await supabaseClient
+      .from('file_shares')
+      .insert(unique);
+
+    if (error) throw new Error(`DB.shareFiles: ${error.message}`);
+  },
+
+  async getFileShares() {
+    const { data, error } = await supabaseClient
+      .from('file_shares')
+      .select('id, file_id, shared_with_user_id, permission, created_at')
+      .order('created_at', { ascending: false });
+
+    if (error) throw new Error(`DB.getFileShares: ${error.message}`);
+    return data || [];
+  },
+
+  async getSharedFilesWithMe() {
+    const { data, error } = await supabaseClient
+      .from('file_shares')
+      .select('id, file_id, owner_user_id, permission, created_at, files(filename, storage_path, size, file_type, created_at)')
+      .eq('shared_with_user_id', this._uid())
+      .order('created_at', { ascending: false });
+
+    if (error) throw new Error(`DB.getSharedFilesWithMe: ${error.message}`);
+    return data || [];
+  },
+
+  async updateFileSharePermission(shareId, permission) {
+    const { error } = await supabaseClient
+      .from('file_shares')
+      .update({ permission })
+      .eq('id', shareId);
+
+    if (error) throw new Error(`DB.updateFileSharePermission: ${error.message}`);
+  },
+
+  async revokeFileShare(shareId) {
+    const { error } = await supabaseClient
+      .from('file_shares')
+      .delete()
+      .eq('id', shareId);
+
+    if (error) throw new Error(`DB.revokeFileShare: ${error.message}`);
   },
 };
