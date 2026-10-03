@@ -92,10 +92,14 @@ const Auth = {
 
   showLoginScreen() {
     document.getElementById('auth-screen').classList.remove('hidden');
+    document.querySelector('.app-container').inert = true;
+    document.getElementById('fab-btn').inert = true;
   },
 
   hideLoginScreen() {
     document.getElementById('auth-screen').classList.add('hidden');
+    document.querySelector('.app-container').inert = false;
+    document.getElementById('fab-btn').inert = false;
   },
 
   _updateSidebarUser() {
@@ -109,7 +113,6 @@ const Auth = {
     const submitBtn = document.getElementById('auth-submit');
     const toggleBtn = document.getElementById('auth-toggle-btn');
     const passwordInput = document.getElementById('auth-password');
-    const logoutBtn = document.getElementById('logout-btn');
     const forgotLink = document.getElementById('auth-forgot-link');
     const resetBackLink = document.getElementById('auth-reset-back-link');
     const resetSubmitBtn = document.getElementById('auth-reset-submit');
@@ -133,10 +136,6 @@ const Auth = {
 
     if (toggleBtn) {
       toggleBtn.addEventListener('click', () => this._toggleMode());
-    }
-
-    if (logoutBtn) {
-      logoutBtn.addEventListener('click', () => this._showSignOutModal());
     }
 
     const settingsLogoutBtn = document.getElementById('settings-logout-btn');

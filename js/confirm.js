@@ -1,5 +1,8 @@
 const Confirm = {
-  _resolve: null,
+  _pendingPromise: null,
+  _previousFocus: null,
+  _hideTimers: new Map(),
+  _confirmHideTimer: null,
 
   _icons: {
     danger: '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
@@ -12,21 +15,28 @@ const Confirm = {
   hideModal(id) {
     const modal = document.getElementById(id);
     if (!modal || modal.classList.contains('hidden')) return;
+    clearTimeout(this._hideTimers.get(id));
     modal.classList.add('modal-closing');
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       modal.classList.remove('modal-closing');
       modal.classList.add('hidden');
+      this._hideTimers.delete(id);
     }, 150);
+    this._hideTimers.set(id, timer);
   },
 
   showModal(id) {
     const modal = document.getElementById(id);
-    if (modal) modal.classList.remove('hidden');
+    if (!modal) return;
+    clearTimeout(this._hideTimers.get(id));
+    this._hideTimers.delete(id);
+    modal.classList.remove('hidden', 'modal-closing');
   },
 
   show({ title, description, confirmText = 'Confirm', cancelText = 'Cancel', type = 'danger', icon = null }) {
-    return new Promise((resolve) => {
-      this._resolve = resolve;
+    if (this._pendingPromise) return Promise.resolve(false);
+    this._pendingPromise = new Promise((resolve) => {
+      this._previousFocus = document.activeElement;
 
       const modal = document.getElementById('confirm-modal');
       const iconEl = document.getElementById('confirm-icon');
@@ -48,22 +58,49 @@ const Confirm = {
         okBtn.removeEventListener('click', onOk);
         cancelBtn.removeEventListener('click', onCancel);
         modal.removeEventListener('click', onBackdrop);
+        modal.removeEventListener('keydown', onKeydown);
         modal.classList.add('modal-closing');
-        setTimeout(() => {
+        this._confirmHideTimer = setTimeout(() => {
           modal.classList.remove('modal-closing');
           modal.classList.add('hidden');
+          this._confirmHideTimer = null;
         }, 150);
+        this._pendingPromise = null;
+        if (this._previousFocus?.isConnected) this._previousFocus.focus();
+        this._previousFocus = null;
       };
 
       const onOk = () => { cleanup(); resolve(true); };
       const onCancel = () => { cleanup(); resolve(false); };
       const onBackdrop = (e) => { if (e.target === modal) { cleanup(); resolve(false); } };
+      const onKeydown = (e) => {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          cleanup();
+          resolve(false);
+        } else if (e.key === 'Tab') {
+          const buttons = [cancelBtn, okBtn];
+          const index = buttons.indexOf(document.activeElement);
+          if (e.shiftKey && index <= 0) {
+            e.preventDefault();
+            okBtn.focus();
+          } else if (!e.shiftKey && index >= buttons.length - 1) {
+            e.preventDefault();
+            cancelBtn.focus();
+          }
+        }
+      };
 
       okBtn.addEventListener('click', onOk);
       cancelBtn.addEventListener('click', onCancel);
       modal.addEventListener('click', onBackdrop);
+      modal.addEventListener('keydown', onKeydown);
 
-      modal.classList.remove('hidden');
+      clearTimeout(this._confirmHideTimer);
+      this._confirmHideTimer = null;
+      modal.classList.remove('hidden', 'modal-closing');
+      cancelBtn.focus();
     });
+    return this._pendingPromise;
   },
 };

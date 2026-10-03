@@ -20,6 +20,8 @@ const Share = {
   _selectedUsers: new Set(),
   _selectedPermission: 'view',
   _activeTab: 'notes',
+  _pickerController: null,
+  _sharing: false,
 
   _CHECK_ICON:
     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
@@ -116,6 +118,9 @@ const Share = {
     }
 
     container.appendChild(layout);
+    this._updateSubmit();
+    this._updateToggle(this._activeTab);
+    this._updateToggle('users');
   },
 
   _renderNotesTab(layout) {
@@ -293,11 +298,11 @@ const Share = {
     permGroup.innerHTML = `
       <span class="share-perm-label">Permission:</span>
       <label class="share-perm-option">
-        <input type="radio" name="share-permission" value="view" checked>
+        <input type="radio" name="share-permission" value="view" ${this._selectedPermission === 'view' ? 'checked' : ''}>
         <span class="share-perm-text">View only</span>
       </label>
       <label class="share-perm-option">
-        <input type="radio" name="share-permission" value="edit">
+        <input type="radio" name="share-permission" value="edit" ${this._selectedPermission === 'edit' ? 'checked' : ''}>
         <span class="share-perm-text">Can edit</span>
       </label>
     `;
@@ -337,23 +342,13 @@ const Share = {
       : '';
 
     card.innerHTML = `
-      ${note.pinned ? `<div class="note-card-actions-row"><button class="note-card-pin active" title="Pinned">${pinIcon}</button></div>` : ''}
+      ${note.pinned ? `<div class="note-card-actions-row"><span class="note-card-pin active" aria-hidden="true">${pinIcon}</span></div>` : ''}
       <div class="note-card-title">${title}</div>
       <div class="note-card-snippet">${snippet}</div>
       <div class="note-card-footer"><span class="note-card-date">${date}</span></div>
       <div class="share-picker-check">${this._BOX_ICON}</div>`;
 
-    if (this._selectedNotes.has(note.id)) {
-      card.classList.add('selected');
-      card.querySelector('.share-picker-check').innerHTML = this._CHECK_ICON;
-    }
-
-    card.addEventListener('click', () => {
-      if (this._selectedNotes.has(note.id)) this._selectedNotes.delete(note.id);
-      else this._selectedNotes.add(note.id);
-      card.classList.toggle('selected', this._selectedNotes.has(note.id));
-      card.querySelector('.share-picker-check').innerHTML = this._selectedNotes.has(note.id) ? this._CHECK_ICON : this._BOX_ICON;
-    });
+    this._wirePickerCard(card, this._selectedNotes, note.id, card.querySelector('.share-picker-check'));
 
     return card;
   },
@@ -397,19 +392,34 @@ const Share = {
     card.appendChild(preview);
     card.appendChild(info);
 
-    if (this._selectedFiles.has(file.id)) {
-      card.classList.add('selected');
-      check.innerHTML = this._CHECK_ICON;
-    }
-
-    card.addEventListener('click', () => {
-      if (this._selectedFiles.has(file.id)) this._selectedFiles.delete(file.id);
-      else this._selectedFiles.add(file.id);
-      card.classList.toggle('selected', this._selectedFiles.has(file.id));
-      check.innerHTML = this._selectedFiles.has(file.id) ? this._CHECK_ICON : this._BOX_ICON;
-    });
+    this._wirePickerCard(card, this._selectedFiles, file.id, check);
 
     return card;
+  },
+
+  _wirePickerCard(card, selected, id, check, afterToggle = null) {
+    card.setAttribute('role', 'checkbox');
+    card.tabIndex = 0;
+    const sync = () => {
+      const checked = selected.has(id);
+      card.classList.toggle('selected', checked);
+      card.setAttribute('aria-checked', String(checked));
+      check.innerHTML = checked ? this._CHECK_ICON : this._BOX_ICON;
+    };
+    const toggle = () => {
+      if (selected.has(id)) selected.delete(id);
+      else selected.add(id);
+      sync();
+      if (afterToggle) afterToggle();
+    };
+    card.addEventListener('click', toggle);
+    card.addEventListener('keydown', (e) => {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        toggle();
+      }
+    });
+    sync();
   },
 
   _openPickerModal(type) {
@@ -425,6 +435,9 @@ const Share = {
 
     const selectedSet = isNotes ? this._selectedNotes : this._selectedFiles;
     const before = new Set(selectedSet);
+    this._pickerController?.abort();
+    const controller = new AbortController();
+    this._pickerController = controller;
 
     titleEl.textContent = isNotes ? 'Choose Notes to Share' : 'Choose Files to Share';
     grid.innerHTML = '';
@@ -433,16 +446,18 @@ const Share = {
       grid.appendChild(isNotes ? this._pickerNoteCard(item) : this._pickerFileCard(item));
     }
 
-    const onDone = () => {
+    const finish = () => {
+      controller.abort();
+      if (this._pickerController === controller) this._pickerController = null;
       Confirm.hideModal('share-picker-modal');
       this.render();
-      this._updateSubmit();
+      document.querySelector('.share-choose-btn')?.focus();
     };
+    const onDone = () => finish();
     const onCancel = () => {
       selectedSet.clear();
       before.forEach((id) => selectedSet.add(id));
-      Confirm.hideModal('share-picker-modal');
-      this.render();
+      finish();
     };
     const onBackdrop = (e) => {
       if (e.target === modal) onCancel();
@@ -451,16 +466,13 @@ const Share = {
       if (e.key === 'Escape') onCancel();
     };
 
-    doneBtn.removeEventListener('click', onDone);
-    cancelBtn.removeEventListener('click', onCancel);
-    modal.removeEventListener('click', onBackdrop);
-    document.removeEventListener('keydown', onEsc);
-    doneBtn.addEventListener('click', onDone);
-    cancelBtn.addEventListener('click', onCancel);
-    modal.addEventListener('click', onBackdrop);
-    document.addEventListener('keydown', onEsc);
+    doneBtn.addEventListener('click', onDone, { signal: controller.signal });
+    cancelBtn.addEventListener('click', onCancel, { signal: controller.signal });
+    modal.addEventListener('click', onBackdrop, { signal: controller.signal });
+    document.addEventListener('keydown', onEsc, { signal: controller.signal });
 
     Confirm.showModal('share-picker-modal');
+    doneBtn.focus();
   },
 
   _getFileIcon(mimeType = '') {
@@ -495,11 +507,7 @@ const Share = {
     row.appendChild(avatar);
     row.appendChild(email);
 
-    row.addEventListener('click', () => {
-      if (this._selectedUsers.has(user.id)) this._selectedUsers.delete(user.id);
-      else this._selectedUsers.add(user.id);
-      row.classList.toggle('selected', this._selectedUsers.has(user.id));
-      check.innerHTML = this._selectedUsers.has(user.id) ? this._CHECK_ICON : this._BOX_ICON;
+    this._wirePickerCard(row, this._selectedUsers, user.id, check, () => {
       this._updateSubmit();
       this._updateToggle('users');
     });
@@ -517,7 +525,7 @@ const Share = {
     const u = this._selectedUsers.size;
     const enabled = n > 0 && u > 0;
     const itemLabel = this._activeTab === 'notes' ? 'note' : 'file';
-    btn.disabled = !enabled;
+    btn.disabled = !enabled || this._sharing;
     label.textContent = enabled
       ? `Share ${n} ${itemLabel}${n > 1 ? 's' : ''} with ${u} user${u > 1 ? 's' : ''}`
       : 'Share Selected';
@@ -580,6 +588,7 @@ const Share = {
         const id = row.dataset.id;
         const isSelected = selected.has(id);
         row.classList.toggle('selected', isSelected);
+        row.setAttribute('aria-checked', String(isSelected));
         const check = row.querySelector('.share-checkbox');
         if (check) check.innerHTML = isSelected ? this._CHECK_ICON : this._BOX_ICON;
       }
@@ -591,7 +600,7 @@ const Share = {
 
   _updateToggle(type) {
     const items = type === 'notes' ? this._notes : type === 'files' ? this._files : this._users;
-    const selected = type === 'notes' ? this._selectedNotes : this._selectedUsers;
+    const selected = type === 'notes' ? this._selectedNotes : type === 'files' ? this._selectedFiles : this._selectedUsers;
     const toggle = document.querySelector(`.share-select-toggle[data-type="${type}"]`);
     if (!toggle) return;
 
@@ -601,77 +610,48 @@ const Share = {
   },
 
   async shareSelected(type) {
+    if (this._sharing) return;
     const userIds = Array.from(this._selectedUsers);
     if (userIds.length === 0) return;
+    const isNotes = type === 'notes';
+    const itemIds = Array.from(isNotes ? this._selectedNotes : this._selectedFiles);
+    if (itemIds.length === 0) return;
 
-    if (type === 'notes') {
-      const noteIds = Array.from(this._selectedNotes);
-      if (noteIds.length === 0) return;
-
-      const existing = new Set(this._shares.map((s) => `${s.note_id}::${s.shared_with_user_id}`));
-      const pairs = [];
-      for (const noteId of noteIds) {
-        for (const userId of userIds) {
-          if (!existing.has(`${noteId}::${userId}`)) {
-            pairs.push({ note_id: noteId, shared_with_user_id: userId, permission: this._selectedPermission });
-          }
+    const idKey = isNotes ? 'note_id' : 'file_id';
+    const noun = isNotes ? 'note' : 'file';
+    const shares = isNotes ? this._shares : this._fileShares;
+    const existing = new Set(shares.map((s) => `${s[idKey]}::${s.shared_with_user_id}`));
+    const pairs = [];
+    for (const itemId of itemIds) {
+      for (const userId of userIds) {
+        if (!existing.has(`${itemId}::${userId}`)) {
+          pairs.push({ [idKey]: itemId, shared_with_user_id: userId, permission: this._selectedPermission });
         }
       }
+    }
 
-      if (pairs.length === 0) {
-        Toast.show('Those notes are already shared with those users.', 'info');
-        return;
-      }
+    if (pairs.length === 0) {
+      Toast.show(`Those ${noun}s are already shared with those users.`, 'info');
+      return;
+    }
 
-      const btn = document.getElementById('share-submit-btn');
-      if (btn) btn.disabled = true;
-
-      try {
-        await DB.shareNotes(pairs);
-        Toast.show(
-          `Shared ${noteIds.length} note${noteIds.length > 1 ? 's' : ''} with ${userIds.length} user${userIds.length > 1 ? 's' : ''}.`,
-          'success'
-        );
-        await this.load();
-      } catch (err) {
-        console.error(err);
-        Toast.show(`Failed to share: ${friendlyError(err)}`, 'error');
-        this._updateSubmit();
-      }
-    } else {
-      const fileIds = Array.from(this._selectedFiles);
-      if (fileIds.length === 0) return;
-
-      const existing = new Set(this._fileShares.map((s) => `${s.file_id}::${s.shared_with_user_id}`));
-      const pairs = [];
-      for (const fileId of fileIds) {
-        for (const userId of userIds) {
-          if (!existing.has(`${fileId}::${userId}`)) {
-            pairs.push({ file_id: fileId, shared_with_user_id: userId, permission: this._selectedPermission });
-          }
-        }
-      }
-
-      if (pairs.length === 0) {
-        Toast.show('Those files are already shared with those users.', 'info');
-        return;
-      }
-
-      const btn = document.getElementById('share-submit-btn');
-      if (btn) btn.disabled = true;
-
-      try {
-        await DB.shareFiles(pairs);
-        Toast.show(
-          `Shared ${fileIds.length} file${fileIds.length > 1 ? 's' : ''} with ${userIds.length} user${userIds.length > 1 ? 's' : ''}.`,
-          'success'
-        );
-        await this.load();
-      } catch (err) {
-        console.error(err);
-        Toast.show(`Failed to share: ${friendlyError(err)}`, 'error');
-        this._updateSubmit();
-      }
+    this._sharing = true;
+    const btn = document.getElementById('share-submit-btn');
+    if (btn) btn.disabled = true;
+    try {
+      if (isNotes) await DB.shareNotes(pairs);
+      else await DB.shareFiles(pairs);
+      Toast.show(
+        `Shared ${itemIds.length} ${noun}${itemIds.length > 1 ? 's' : ''} with ${userIds.length} user${userIds.length > 1 ? 's' : ''}.`,
+        'success'
+      );
+      await this.load();
+    } catch (err) {
+      console.error(err);
+      Toast.show(`Failed to share: ${friendlyError(err)}`, 'error');
+    } finally {
+      this._sharing = false;
+      this._updateSubmit();
     }
   },
 
@@ -715,11 +695,12 @@ const Share = {
       text.appendChild(arrow);
       text.appendChild(userEmail);
 
-      const permBadge = document.createElement('span');
+      const permBadge = document.createElement('button');
+      permBadge.type = 'button';
       permBadge.className = `share-perm-badge share-perm-${share.permission || 'view'}`;
       permBadge.textContent = share.permission === 'edit' ? 'Can edit' : 'View only';
       permBadge.title = 'Click to toggle permission';
-      permBadge.style.cursor = 'pointer';
+      permBadge.setAttribute('aria-label', `Change permission for ${note ? note.title || 'note' : 'note'} shared with ${user ? user.email : 'unknown user'}; currently ${permBadge.textContent}`);
       permBadge.addEventListener('click', (e) => {
         e.stopPropagation();
         this.togglePermission(share);
@@ -743,15 +724,20 @@ const Share = {
   },
 
   async revokeShare(shareId) {
+    return this._revokeShare(shareId, 'note');
+  },
+
+  async _revokeShare(shareId, kind) {
     const confirmed = await Confirm.show({
       title: 'Revoke Share?',
-      description: 'This user will no longer be able to view the note.',
+      description: `This user will no longer be able to view the ${kind}.`,
       confirmText: 'Revoke',
       type: 'danger',
     });
     if (!confirmed) return;
     try {
-      await DB.revokeShare(shareId);
+      if (kind === 'note') await DB.revokeShare(shareId);
+      else await DB.revokeFileShare(shareId);
       Toast.show('Share revoked.', 'success');
       await this.load();
     } catch (err) {
@@ -761,9 +747,14 @@ const Share = {
   },
 
   async togglePermission(share) {
+    return this._togglePermission(share, 'note');
+  },
+
+  async _togglePermission(share, kind) {
     const newPerm = share.permission === 'edit' ? 'view' : 'edit';
     try {
-      await DB.updateSharePermission(share.id, newPerm);
+      if (kind === 'note') await DB.updateSharePermission(share.id, newPerm);
+      else await DB.updateFileSharePermission(share.id, newPerm);
       Toast.show(`Permission changed to ${newPerm === 'edit' ? 'Can edit' : 'View only'}.`, 'success');
       await this.load();
     } catch (err) {
@@ -834,7 +825,7 @@ const Share = {
       card.appendChild(head);
       card.appendChild(meta);
       card.appendChild(body);
-      card.addEventListener('click', () => card.classList.toggle('expanded'));
+      this._wireIncomingCard(card);
       list.appendChild(card);
     }
     return list;
@@ -876,11 +867,12 @@ const Share = {
       text.appendChild(arrow);
       text.appendChild(userEmail);
 
-      const permBadge = document.createElement('span');
+      const permBadge = document.createElement('button');
+      permBadge.type = 'button';
       permBadge.className = `share-perm-badge share-perm-${share.permission || 'view'}`;
       permBadge.textContent = share.permission === 'edit' ? 'Can edit' : 'View only';
       permBadge.title = 'Click to toggle permission';
-      permBadge.style.cursor = 'pointer';
+      permBadge.setAttribute('aria-label', `Change permission for ${file ? file.filename : 'file'} shared with ${user ? user.email : 'unknown user'}; currently ${permBadge.textContent}`);
       permBadge.addEventListener('click', (e) => {
         e.stopPropagation();
         this.toggleFilePermission(share);
@@ -904,33 +896,11 @@ const Share = {
   },
 
   async revokeFileShare(shareId) {
-    const confirmed = await Confirm.show({
-      title: 'Revoke Share?',
-      description: 'This user will no longer be able to view the file.',
-      confirmText: 'Revoke',
-      type: 'danger',
-    });
-    if (!confirmed) return;
-    try {
-      await DB.revokeFileShare(shareId);
-      Toast.show('Share revoked.', 'success');
-      await this.load();
-    } catch (err) {
-      console.error(err);
-      Toast.show(`Failed to revoke: ${friendlyError(err)}`, 'error');
-    }
+    return this._revokeShare(shareId, 'file');
   },
 
   async toggleFilePermission(share) {
-    const newPerm = share.permission === 'edit' ? 'view' : 'edit';
-    try {
-      await DB.updateFileSharePermission(share.id, newPerm);
-      Toast.show(`Permission changed to ${newPerm === 'edit' ? 'Can edit' : 'View only'}.`, 'success');
-      await this.load();
-    } catch (err) {
-      console.error(err);
-      Toast.show(`Failed to update permission: ${friendlyError(err)}`, 'error');
-    }
+    return this._togglePermission(share, 'file');
   },
 
   _incomingFileList() {
@@ -995,7 +965,7 @@ const Share = {
       card.appendChild(head);
       card.appendChild(meta);
       card.appendChild(body);
-      card.addEventListener('click', () => card.classList.toggle('expanded'));
+      this._wireIncomingCard(card);
       list.appendChild(card);
     }
     return list;
@@ -1004,6 +974,26 @@ const Share = {
   /* ------------------------------------------------------------------ */
   /*  Helpers                                                             */
   /* ------------------------------------------------------------------ */
+
+  _wireIncomingCard(card) {
+    const title = card.querySelector('.share-incoming-title')?.textContent || 'shared item';
+    card.setAttribute('role', 'button');
+    card.setAttribute('aria-expanded', 'false');
+    card.setAttribute('aria-label', `Show details for ${title}`);
+    card.tabIndex = 0;
+    const toggle = () => {
+      const expanded = card.classList.toggle('expanded');
+      card.setAttribute('aria-expanded', String(expanded));
+      card.setAttribute('aria-label', `${expanded ? 'Hide' : 'Show'} details for ${title}`);
+    };
+    card.addEventListener('click', toggle);
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggle();
+      }
+    });
+  },
 
   _header(title, subtitle, icon) {
     const header = document.createElement('div');

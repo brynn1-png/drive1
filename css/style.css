@@ -27,6 +27,7 @@
 
   /* Primary accent — charcoal */
   --accent:          #1c1c1c;
+  --on-accent:       #ffffff;
   --accent-light:    #333333;
   --accent-dark:     #111111;
   --accent-glow:     transparent;
@@ -39,7 +40,7 @@
   /* Text */
   --text-primary:    #1a1a1a;
   --text-secondary:  #555555;
-  --text-muted:      #999999;
+  --text-muted:      #666666;
   --text-inverse:    #ffffff;
 
   /* Semantic */
@@ -129,6 +130,15 @@ body {
 ::selection {
   background: var(--lime);
   color: #000000;
+}
+
+:where(button, a, input, textarea, select, [role="button"], [tabindex="0"]):focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+:where(.sidebar, .auth-screen) :where(button, a, input):focus-visible {
+  outline-color: var(--lime);
 }
 
 /* ============================================================
@@ -303,7 +313,7 @@ body.sidebar-open .sidebar {
 
 .folder-chip.active {
   background: var(--accent);
-  color: #ffffff;
+  color: var(--on-accent);
   border-color: var(--accent);
 }
 
@@ -567,7 +577,7 @@ body.sidebar-open .sidebar {
 
 .sort-dropdown-option.active {
   background: var(--accent);
-  color: #ffffff;
+  color: var(--on-accent);
 }
 
 /* View toggle */
@@ -590,7 +600,7 @@ body.sidebar-open .sidebar {
 }
 
 .view-btn:hover  { color: var(--text-secondary); background: var(--bg-card-hover); }
-.view-btn.active { color: #ffffff; background: var(--accent); }
+.view-btn.active { color: var(--on-accent); background: var(--accent); }
 
 /* ============================================================
    7. Drop Zone Overlay
@@ -646,7 +656,7 @@ body.sidebar-open .sidebar {
 
 .files-container.grid-view {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 16px;
   align-content: start;
 }
@@ -683,6 +693,15 @@ body.sidebar-open .sidebar {
   border-bottom: 2px solid var(--border);
 }
 
+button.file-card-preview {
+  padding: 0;
+  border-top: 0;
+  border-left: 0;
+  border-right: 0;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
 .file-card-preview img {
   width: 100%;
   height: 100%;
@@ -709,7 +728,8 @@ body.sidebar-open .sidebar {
 }
 
 .file-card-name {
-  font-size: 13px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
   font-weight: 700;
   color: var(--text-primary);
   white-space: nowrap;
@@ -720,7 +740,7 @@ body.sidebar-open .sidebar {
 .file-card-meta {
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-muted);
   font-weight: 700;
 }
@@ -923,13 +943,8 @@ body.sidebar-open .sidebar {
   box-shadow: var(--shadow-modal);
 }
 
-.upload-icon { color: var(--accent); animation: bounce 0.8s ease infinite alternate; }
+.upload-icon { color: var(--accent); }
 .upload-icon svg { display: block; }
-
-@keyframes bounce {
-  from { transform: translateY(0); }
-  to   { transform: translateY(-8px); }
-}
 
 .upload-filename {
   font-size: 14px;
@@ -1157,7 +1172,7 @@ body.sidebar-open .sidebar {
 .move-folder-btn:hover {
   background: var(--accent);
   border-color: var(--border);
-  color: #ffffff;
+  color: var(--on-accent);
   box-shadow: var(--shadow-sm);
 }
 
@@ -1173,6 +1188,7 @@ body.sidebar-open .sidebar {
    ============================================================ */
 .btn {
   padding: 10px 20px;
+  min-height: 44px;
   border-radius: var(--radius-md);
   font-size: 14px;
   font-weight: 700;
@@ -1181,13 +1197,14 @@ body.sidebar-open .sidebar {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  white-space: nowrap;
 }
 
 .btn svg { flex-shrink: 0; }
 
 .btn-primary {
   background: var(--accent);
-  color: #ffffff;
+  color: var(--on-accent);
   border: 2px solid var(--border);
   box-shadow: var(--shadow-accent);
 }
@@ -1371,6 +1388,8 @@ body.sidebar-open .sidebar {
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
+  min-height: 44px;
+  border: 2px solid transparent;
   border-radius: var(--radius-sm);
   font-size: 14px;
   font-weight: 700;
@@ -1395,10 +1414,10 @@ body.sidebar-open .sidebar {
 .nav-item:hover svg { opacity: 1; }
 
 .nav-item.active {
-  background: var(--accent);
+  background: #292929;
   color: #ffffff;
-  border: 2px solid var(--border);
-  box-shadow: 3px 3px 0 #1c1c1c;
+  border-color: var(--lime);
+  box-shadow: none;
 }
 
 .nav-item.active svg { opacity: 1; color: #ffffff; }
@@ -1459,8 +1478,11 @@ body.sidebar-open .sidebar {
    22b. Settings View
    ============================================================ */
 #settings-container {
-  columns: 400px;
-  column-gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  align-content: start;
+  align-items: start;
 }
 
 .settings-section {
@@ -1469,14 +1491,12 @@ body.sidebar-open .sidebar {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
   padding: 24px;
-  margin-bottom: 20px;
-  break-inside: avoid;
-  -webkit-column-break-inside: avoid;
+  min-width: 0;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1180px) {
   #settings-container {
-    columns: 1;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -1501,6 +1521,7 @@ body.sidebar-open .sidebar {
 }
 
 .settings-row-desc {
+  font-family: 'Poppins', sans-serif;
   font-size: 12px;
   color: var(--text-muted);
   margin-top: 2px;
@@ -1671,7 +1692,8 @@ body.sidebar-open .sidebar {
 }
 
 .note-card-snippet {
-  font-size: 13px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
   color: var(--text-secondary);
   line-height: 1.5;
   flex: 1;
@@ -1773,7 +1795,7 @@ body.sidebar-open .sidebar {
 
 .shared-badge {
   background: var(--accent);
-  color: var(--text-inverse);
+  color: var(--on-accent);
 }
 
 .owned-badge {
@@ -2536,6 +2558,7 @@ body:not(.sidebar-open) .top-bar {
   align-items: center;
   gap: 10px;
   padding: 12px 18px;
+  min-height: 44px;
   background: var(--bg-modal);
   border: 2px solid var(--border);
   border-radius: var(--radius-md);
@@ -2752,7 +2775,7 @@ body:not(.sidebar-open) .top-bar {
 
 .auth-desc {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.72);
   font-weight: 700;
 }
 
@@ -2760,6 +2783,14 @@ body:not(.sidebar-open) .top-bar {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.auth-field-label {
+  align-self: flex-start;
+  margin: 2px 0 -8px;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .auth-error {
@@ -2791,7 +2822,7 @@ body:not(.sidebar-open) .top-bar {
 }
 
 .auth-input::placeholder {
-  color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.65);
   font-weight: 400;
 }
 
@@ -2811,9 +2842,11 @@ body:not(.sidebar-open) .top-bar {
 
 .auth-password-toggle {
   position: absolute;
-  right: 12px;
+  right: 2px;
   top: 50%;
   transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2826,6 +2859,15 @@ body:not(.sidebar-open) .top-bar {
 
 .auth-password-toggle:hover {
   color: var(--lime);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 .auth-password-toggle .icon-eye-off {
@@ -2899,6 +2941,15 @@ body:not(.sidebar-open) .top-bar {
   justify-content: center;
   padding: 14px;
   font-size: 15px;
+  background: var(--lime);
+  color: #111111;
+  border-color: var(--lime);
+}
+
+.auth-submit:hover:not(:disabled) {
+  background: var(--lime-hover);
+  border-color: var(--lime-hover);
+  color: #111111;
 }
 
 .auth-submit:disabled {
@@ -2910,7 +2961,7 @@ body:not(.sidebar-open) .top-bar {
 
 .auth-toggle-text {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.72);
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -3009,18 +3060,6 @@ body:not(.sidebar-open) .top-bar {
   cursor: pointer;
   transition: var(--transition);
   flex-shrink: 0;
-}
-
-.sidebar-logout-btn {
-  width: 100%;
-}
-
-/* Sidebar footer is a dark surface; the Settings "Account" section
-   sits on a light card — same button, different contrast needs. */
-.sidebar-footer .logout-btn {
-  color: rgba(255, 255, 255, 0.5);
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .settings-section .logout-btn {
@@ -3146,6 +3185,11 @@ body:not(.sidebar-open) .top-bar {
   /* Show FAB */
   .fab { display: flex; }
   .fab-menu { display: flex; }
+
+  body[data-view="share"] .fab,
+  body[data-view="share"] .fab-menu,
+  body[data-view="settings"] .fab,
+  body[data-view="settings"] .fab-menu { display: none; }
 }
 
 /* Mobile: hide sidebar collapse button, center header */
@@ -3388,7 +3432,7 @@ body:not(.sidebar-open) .top-bar {
 
 .share-tab.active {
   background: var(--accent);
-  color: var(--text-inverse);
+  color: var(--on-accent);
   border-color: var(--accent);
 }
 
@@ -3483,7 +3527,7 @@ body:not(.sidebar-open) .top-bar {
 
 .share-select-toggle.all-selected {
   background: var(--accent);
-  color: var(--text-inverse);
+  color: var(--on-accent);
   border-color: var(--accent);
 }
 
@@ -3610,7 +3654,7 @@ body:not(.sidebar-open) .top-bar {
   padding: 2px 8px;
   border-radius: var(--radius-xs);
   background: var(--accent);
-  color: var(--text-inverse);
+  color: var(--on-accent);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3625,7 +3669,7 @@ body:not(.sidebar-open) .top-bar {
   height: 28px;
   border-radius: var(--radius-full);
   background: var(--accent);
-  color: var(--text-inverse);
+  color: var(--on-accent);
   font-size: 11px;
   font-weight: 700;
   display: flex;
@@ -3890,12 +3934,15 @@ body:not(.sidebar-open) .top-bar {
 
 /* Permission badge */
 .share-perm-badge {
+  border: 0;
   font-size: 10px;
   font-weight: 700;
   padding: 3px 8px;
   letter-spacing: 0.3px;
   flex-shrink: 0;
 }
+
+button.share-perm-badge { cursor: pointer; }
 
 .share-perm-view {
   background: var(--bg-card-hover);
@@ -3963,7 +4010,7 @@ body:not(.sidebar-open) .top-bar {
   height: 28px;
   border-radius: var(--radius-full);
   background: var(--accent);
-  color: var(--text-inverse);
+  color: var(--on-accent);
   font-size: 12px;
   font-weight: 700;
   display: flex;
@@ -4141,4 +4188,57 @@ body:not(.sidebar-open) .top-bar {
   .share-incoming-list {
     max-height: 260px;
   }
+}
+
+/* The sidebar leaves too little room for desktop toolbars and split panels
+   on medium screens. Keep every action visible and let these views scroll. */
+@media (min-width: 769px) and (max-width: 1180px) {
+  .top-bar {
+    height: auto;
+    min-height: var(--topbar-height);
+    flex-wrap: wrap;
+    padding: 12px 24px;
+    gap: 10px;
+  }
+
+  .top-bar > .breadcrumb,
+  .top-bar > .view-title {
+    flex-basis: 100%;
+    min-width: 0;
+  }
+
+  .top-bar-controls {
+    width: 100%;
+    min-width: 0;
+    margin-left: 0;
+    flex-wrap: wrap;
+  }
+
+  .search-container {
+    flex: 1 1 190px;
+    min-width: 150px;
+  }
+
+  .search-input,
+  .search-input:focus { width: 100%; }
+
+  #share-container {
+    display: block;
+    height: auto;
+    overflow: visible;
+  }
+
+  .share-layout {
+    height: auto;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+  }
+
+  .share-panel,
+  .share-section { min-height: 240px; }
+
+  .share-notes-list,
+  .share-users-list,
+  .share-shares-list,
+  .share-incoming-list { max-height: 320px; }
 }

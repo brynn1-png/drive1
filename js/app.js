@@ -20,7 +20,15 @@ const Toast = {
       info: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
       warning: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
     };
-    toast.innerHTML = `<span class="toast-icon">${icons[type] || icons.info}</span><span class="toast-msg">${message}</span>`;
+    const icon = document.createElement('span');
+    icon.className = 'toast-icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.innerHTML = icons[type] || icons.info;
+    const copy = document.createElement('span');
+    copy.className = 'toast-msg';
+    copy.textContent = message;
+    toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+    toast.append(icon, copy);
 
     container.appendChild(toast);
 
@@ -31,6 +39,7 @@ const Toast = {
     setTimeout(() => {
       toast.classList.remove('toast-show');
       toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+      setTimeout(() => toast.remove(), 300);
     }, duration);
   },
 };
@@ -77,6 +86,7 @@ const App = {
     files:         [],
     folders:       [],
   },
+  _refreshId: 0,
 
   /* ------------------------------------------------------------------ */
   /*  Bootstrap                                                           */
@@ -104,6 +114,7 @@ const App = {
     if (window.innerWidth > 768) {
       document.body.classList.add('sidebar-open');
     }
+    this._syncSidebar();
 
     this._initControls();
     Upload.init();
@@ -129,6 +140,13 @@ const App = {
         // When searching, look across all folders
         await this.refresh();
       }, 300);
+    });
+    document.getElementById('files-empty-clear-search').addEventListener('click', () => {
+      clearTimeout(searchTimer);
+      document.getElementById('search-input').value = '';
+      this.state.searchQuery = '';
+      this.refresh();
+      document.getElementById('search-input').focus();
     });
 
     // Sort — custom dropdown (a native <select>'s open list can't be
@@ -267,43 +285,46 @@ const App = {
     const fabBtn = document.getElementById('fab-btn');
     const fabMenu = document.getElementById('fab-menu');
     if (fabBtn && fabMenu) {
+      const setFabOpen = (open) => {
+        fabMenu.classList.toggle('open', open);
+        fabBtn.classList.toggle('active', open);
+        fabBtn.setAttribute('aria-expanded', String(open));
+        fabBtn.setAttribute('aria-label', open ? 'Close create menu' : 'Create new');
+        fabMenu.inert = !open;
+        fabMenu.setAttribute('aria-hidden', String(!open));
+      };
+      setFabOpen(false);
       fabBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        fabMenu.classList.toggle('open');
-        fabBtn.classList.toggle('active');
+        setFabOpen(!fabMenu.classList.contains('open'));
       });
 
       document.getElementById('fab-upload-file').addEventListener('click', () => {
-        fabMenu.classList.remove('open');
-        fabBtn.classList.remove('active');
+        setFabOpen(false);
         this.navigateToView('files');
         document.getElementById('file-input').click();
       });
 
       document.getElementById('fab-new-folder').addEventListener('click', () => {
-        fabMenu.classList.remove('open');
-        fabBtn.classList.remove('active');
+        setFabOpen(false);
         this.navigateToView('files');
         Folders.showCreateModal();
       });
 
       document.getElementById('fab-new-project').addEventListener('click', () => {
-        fabMenu.classList.remove('open');
-        fabBtn.classList.remove('active');
+        setFabOpen(false);
         this.navigateToView('tasks');
         Projects.showCreateModal();
       });
 
       document.getElementById('fab-new-note').addEventListener('click', () => {
-        fabMenu.classList.remove('open');
-        fabBtn.classList.remove('active');
+        setFabOpen(false);
         this.navigateToView('notes');
         Notes.createNote();
       });
 
       document.getElementById('fab-new-task').addEventListener('click', () => {
-        fabMenu.classList.remove('open');
-        fabBtn.classList.remove('active');
+        setFabOpen(false);
         this.navigateToView('tasks');
         setTimeout(() => Tasks.showCreateModal(), 100);
       });
@@ -311,8 +332,13 @@ const App = {
       // Close menu when clicking outside
       document.addEventListener('click', (e) => {
         if (!fabMenu.contains(e.target) && !fabBtn.contains(e.target)) {
-          fabMenu.classList.remove('open');
-          fabBtn.classList.remove('active');
+          setFabOpen(false);
+        }
+      });
+      fabMenu.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          setFabOpen(false);
+          fabBtn.focus();
         }
       });
     }
@@ -354,8 +380,11 @@ const App = {
 
   _setViewMode(mode) {
     this.state.viewMode = mode;
-    document.getElementById('grid-view-btn').classList.toggle('active', mode === 'grid');
-    document.getElementById('list-view-btn').classList.toggle('active', mode === 'list');
+    for (const [id, selected] of [['grid-view-btn', mode === 'grid'], ['list-view-btn', mode === 'list']]) {
+      const button = document.getElementById(id);
+      button.classList.toggle('active', selected);
+      button.setAttribute('aria-pressed', String(selected));
+    }
     Gallery.render(this.state.files, mode);
   },
 
@@ -364,18 +393,23 @@ const App = {
   /* ------------------------------------------------------------------ */
 
   async refresh() {
+    const refreshId = ++this._refreshId;
     this._setLoading(true);
     try {
-      await Promise.all([this._loadFiles(), this._loadFolders()]);
+      const [files, folders] = await Promise.all([this._loadFiles(), this._loadFolders()]);
+      if (refreshId !== this._refreshId) return;
+      this.state.files = files;
+      this.state.folders = folders;
       Gallery.render(this.state.files, this.state.viewMode);
       Folders.render(this.state.folders, this.state.currentFolder);
       Folders.renderBreadcrumb(this.state.currentFolder);
       await this._updateStorageInfo();
     } catch (err) {
+      if (refreshId !== this._refreshId) return;
       console.error(err);
-      Toast.show('Failed to load data. Check your Supabase credentials.', 'error');
+      Toast.show('Could not load files. Check your connection and try again.', 'error');
     } finally {
-      this._setLoading(false);
+      if (refreshId === this._refreshId) this._setLoading(false);
     }
   },
 
@@ -418,19 +452,16 @@ const App = {
       }
     }
 
-    this.state.files = files;
+    return files;
   },
 
   async _loadFolders() {
-    this.state.folders = await DB.getFolders();
+    return DB.getFolders();
   },
 
   _setLoading(val) {
     document.getElementById('loading-state').classList.toggle('hidden', !val);
-    if (val) {
-      document.getElementById('files-container').innerHTML = '';
-      document.getElementById('empty-state').classList.add('hidden');
-    }
+    document.getElementById('files-container').setAttribute('aria-busy', String(val));
   },
 
   async _updateStorageInfo() {
@@ -465,17 +496,30 @@ const App = {
   },
 
   navigateToView(view) {
-    if (view === this.state.currentView) return;
+    if (view === this.state.currentView) {
+      this.closeSidebar();
+      return;
+    }
     this.state.currentView = view;
 
     // Update sidebar active state
     document.querySelectorAll('#app-nav .nav-item').forEach((btn) => {
-      btn.classList.toggle('active', btn.dataset.view === view);
+      const active = btn.dataset.view === view;
+      btn.classList.toggle('active', active);
+      if (active) btn.setAttribute('aria-current', 'page');
+      else btn.removeAttribute('aria-current');
     });
     const userInfoBtn = document.getElementById('user-info');
-    if (userInfoBtn) userInfoBtn.classList.toggle('active', view === 'settings');
+    if (userInfoBtn) {
+      userInfoBtn.classList.toggle('active', view === 'settings');
+      if (view === 'settings') userInfoBtn.setAttribute('aria-current', 'page');
+      else userInfoBtn.removeAttribute('aria-current');
+    }
 
     const isFiles = view === 'files';
+    document.body.dataset.view = view;
+    const fabBtn = document.getElementById('fab-btn');
+    if (fabBtn) fabBtn.inert = view === 'share' || view === 'settings';
 
     // Toggle main view containers
     document.getElementById('files-view-wrapper').classList.toggle('hidden', !isFiles);
@@ -499,12 +543,22 @@ const App = {
 
   toggleSidebar() {
     document.body.classList.toggle('sidebar-open');
+    this._syncSidebar();
   },
 
   closeSidebar() {
     if (window.innerWidth <= 768) {
       document.body.classList.remove('sidebar-open');
+      this._syncSidebar();
     }
+  },
+
+  _syncSidebar() {
+    const open = document.body.classList.contains('sidebar-open');
+    const sidebar = document.getElementById('sidebar');
+    sidebar.inert = !open;
+    document.getElementById('sidebar-expand-tab').setAttribute('aria-expanded', String(open));
+    document.getElementById('sidebar-collapse-btn').setAttribute('aria-expanded', String(open));
   },
 
   /* ------------------------------------------------------------------ */

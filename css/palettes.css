@@ -122,6 +122,7 @@ html.theme-3d.palette-ocean {
    Coral — black + coral/red
    ------------------------------------------------------------ */
 html.palette-coral {
+  --on-accent:       #111111;
   --accent:          #f43f5e;
   --accent-light:    #fb7185;
   --accent-dark:     #be123c;
@@ -156,6 +157,7 @@ html.theme-3d.palette-coral {
    Forest — black + green
    ------------------------------------------------------------ */
 html.palette-forest {
+  --on-accent:       #111111;
   --accent:          #059669;
   --accent-light:    #34d399;
   --accent-dark:     #047857;

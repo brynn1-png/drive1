@@ -25,6 +25,13 @@ const Gallery = {
 
     if (!files || files.length === 0) {
       emptyState.classList.remove('hidden');
+      const searching = Boolean(App.state.searchQuery.trim());
+      document.getElementById('files-empty-title').textContent = searching ? 'No matching files' : 'No files here yet';
+      document.getElementById('files-empty-subtitle').textContent = searching
+        ? 'Try another name or clear your search.'
+        : 'Upload files or drag & drop to get started';
+      document.getElementById('files-empty-upload').classList.toggle('hidden', searching);
+      document.getElementById('files-empty-clear-search').classList.toggle('hidden', !searching);
       fileCount.textContent = '';
       return;
     }
@@ -57,8 +64,12 @@ const Gallery = {
     card.className = 'file-card' + (file._isShared ? ' shared' : '');
     card.dataset.id = file.id;
 
-    const preview = document.createElement('div');
+    const preview = document.createElement(isImage || isPdf ? 'button' : 'div');
     preview.className = 'file-card-preview';
+    if (preview.tagName === 'BUTTON') {
+      preview.type = 'button';
+      preview.setAttribute('aria-label', `${isImage ? 'Preview image' : 'Open PDF'}: ${file.filename}`);
+    }
 
     if (isImage) {
       const img = document.createElement('img');
@@ -196,18 +207,22 @@ const Gallery = {
     const lb    = document.getElementById('lightbox');
     const img   = document.getElementById('lightbox-img');
     const close = document.getElementById('lightbox-close');
+    const previousFocus = document.activeElement;
 
     img.src = url;
     img.alt = alt;
     lb.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
+    close.focus();
 
     const closeFn = () => {
       lb.classList.add('hidden');
-      img.src = '';
+      img.removeAttribute('src');
       document.body.style.overflow = '';
       lb.removeEventListener('click', bgClose);
       close.removeEventListener('click', closeFn);
+      document.removeEventListener('keydown', escHandler);
+      if (previousFocus?.isConnected) previousFocus.focus();
     };
 
     const bgClose = (e) => { if (e.target === lb) closeFn(); };
@@ -216,9 +231,8 @@ const Gallery = {
     lb.addEventListener('click', bgClose);
 
     // ESC key closes lightbox
-    document.addEventListener('keydown', function escHandler(e) {
-      if (e.key === 'Escape') { closeFn(); document.removeEventListener('keydown', escHandler); }
-    });
+    const escHandler = (e) => { if (e.key === 'Escape') closeFn(); };
+    document.addEventListener('keydown', escHandler);
   },
 
   /* ------------------------------------------------------------------ */

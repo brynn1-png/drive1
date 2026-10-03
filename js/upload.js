@@ -20,6 +20,14 @@ const Upload = {
   init() {
     // File input (button click)
     const fileInput = document.getElementById('file-input');
+    for (const uploadLabel of [document.getElementById('upload-label'), document.getElementById('files-empty-upload')]) {
+      uploadLabel.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          fileInput.click();
+        }
+      });
+    }
     fileInput.addEventListener('change', (e) => {
       if (e.target.files.length > 0) {
         this._enqueue(Array.from(e.target.files));
