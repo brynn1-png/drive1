@@ -391,7 +391,7 @@ const DB = {
   async getSharedWithMe() {
     const { data, error } = await supabaseClient
       .from('note_shares')
-      .select('id, note_id, owner_user_id, permission, created_at, notes(title, content, updated_at)')
+      .select('id, note_id, owner_user_id, permission, created_at, notes(title, content, content_delta, updated_at)')
       .eq('shared_with_user_id', this._uid())
       .order('created_at', { ascending: false });
 

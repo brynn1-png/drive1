@@ -820,7 +820,9 @@ const Share = {
 
       const body = document.createElement('div');
       body.className = 'share-incoming-body';
-      body.textContent = note.content || 'Empty note';
+      body.innerHTML = note.content_delta
+        ? NoteFormat.toHtml(NoteFormat.clean(note.content_delta)) || 'Empty note'
+        : this._esc(note.content || 'Empty note').replace(/\n/g, '<br>');
 
       card.appendChild(head);
       card.appendChild(meta);

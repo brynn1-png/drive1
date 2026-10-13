@@ -30,6 +30,7 @@ create table if not exists notes (
   user_id uuid not null references auth.users(id) on delete cascade,
   title text not null default 'Untitled',
   content text not null default '',
+  content_delta jsonb,
   pinned boolean default false,
   created_at timestamptz default now(),
   updated_at timestamptz default now()

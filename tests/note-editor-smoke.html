@@ -1,0 +1,59 @@
+<!doctype html>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../vendor/quill/quill.core.css">
+<link rel="stylesheet" href="../css/style.css">
+<div id="notes-container"></div>
+<div id="note-editor-modal" class="modal hidden">
+  <div class="modal-card note-editor-modal-card"><div class="note-editor">
+    <div class="note-editor-header">
+      <button id="note-back-btn">Close</button><span id="note-save-status"></span>
+      <button id="note-expand-btn">Expand</button><button id="note-pin-btn">Pin</button>
+    </div>
+    <input id="note-title-input">
+    <div id="note-format-toolbar"><button id="note-bold-btn"></button><button id="note-highlight-btn"></button></div>
+    <div class="note-editor-body">
+      <div id="note-checklist"><div id="note-checklist-list"></div><span id="note-checklist-count"></span></div>
+      <div id="note-textarea" class="note-textarea"></div>
+    </div>
+  </div></div>
+</div>
+<pre id="result">PENDING</pre>
+<script src="../vendor/quill/quill.js"></script>
+<script src="../js/note-format.js"></script>
+<script>
+  const saved = [];
+  window.DB = {
+    getTasks: async () => [],
+    updateNote: async (id, updates) => { saved.push(updates); return { id, ...updates }; },
+    updateSharedNote: async (id, updates) => { saved.push(updates); return { id, ...updates }; },
+  };
+  window.Toast = { show: () => {} };
+  window.friendlyError = (error) => error.message;
+</script>
+<script src="../js/notes.js"></script>
+<script>
+  (async () => {
+    try {
+      Notes._notes = [{ id: 'n1', title: 'Old note', content: 'Hello world' }];
+      Notes.openNote('n1');
+      Notes._quill.formatText(0, 5, 'bold', true, 'user');
+      Notes._quill.formatText(6, 5, 'background', '#fff2a8', 'user');
+      Notes._toggleExpanded();
+      if (!document.getElementById('note-editor-modal').classList.contains('note-expanded')) throw new Error('expand failed');
+      if (location.search.includes('preview')) { document.getElementById('result').hidden = true; return; }
+      await Notes.closeNote();
+      if (saved.length !== 1 || saved[0].content !== 'Hello world') throw new Error('save failed');
+      if (NoteFormat.toHtml(saved[0].content_delta) !== '<strong>Hello</strong> <mark>world</mark>') throw new Error('formatting lost');
+      if (!document.getElementById('note-editor-modal').classList.contains('hidden')) throw new Error('close failed');
+      Notes._openSharedNote({ id: 's1', title: 'Shared', content: 'Read me', _permission: 'view' });
+      if (Notes._quill.isEnabled() || !document.getElementById('note-format-toolbar').hidden) throw new Error('view-only share is editable');
+      await Notes.closeNote();
+      if (saved.length !== 1) throw new Error('view-only share saved changes');
+      Notes._openSharedNote({ id: 's2', title: 'Shared edit', content: 'Edit me', _permission: 'edit' });
+      Notes._quill.formatText(0, 4, 'bold', true, 'user');
+      await Notes.closeNote();
+      if (saved.length !== 2 || saved[1].content !== 'Edit me') throw new Error('shared edit was not saved');
+      document.getElementById('result').textContent = 'PASS';
+    } catch (error) { document.getElementById('result').textContent = 'FAIL: ' + error.message; }
+  })();
+</script>

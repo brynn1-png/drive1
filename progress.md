@@ -1,12 +1,26 @@
 # Progress Log
 
-## Current State Summary (Updated: 2026-08-20)
+## Current State Summary (Updated: 2026-10-14)
 
-- **Active Task:** Task #1 - In-app note sharing — permissions feature
-- **Status:** 🟢 Done (permissions complete; requires manual SQL migrations + browser test)
-- **Next Action:** Run migrations 007 + 008 in the Supabase SQL Editor, then log in as two users and test share with view/edit permissions
+- **Active Task:** Note editor expansion and formatting
+- **Status:** 🟢 Implemented locally; Supabase migration and live account test remain
+- **Next Action:** Run migration 010 in the Supabase SQL Editor, then test with a signed-in account
 - **Blockers:** None
-- **Last Completed:** Note sharing permissions (view/edit) on 2026-08-20
+- **Last Completed:** Local note editor implementation on 2026-10-14
+
+---
+
+## [2026-10-14] — Expandable formatted note editor
+
+**Status:** 🟢 Implemented locally; live Supabase verification pending
+**Summary:** Added Expand / Restore, bold and highlight formatting, safe shared-note display, and save flushing on close.
+**Steps completed:**
+
+- [x] Bundled Quill 2.0.3 and license files
+- [x] Added `content_delta` migration while preserving plain-text `content`
+- [x] Updated owned and shared note editing, display, and save flow
+- [x] Added unit tests and headless Chrome smoke checks
+- [ ] Apply migration 010 in Supabase and test with a real account
 
 ---
 

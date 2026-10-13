@@ -13,6 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
   <!-- Styles -->
+  <link rel="stylesheet" href="vendor/quill/quill.core.css" />
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/theme-3d.css" />
   <link rel="stylesheet" href="css/palettes.css" />
@@ -509,12 +510,18 @@
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                   Saved
                 </span>
+                <button class="btn btn-ghost note-expand-btn" id="note-expand-btn" type="button" aria-label="Expand note" aria-pressed="false" title="Expand note">Expand</button>
                 <button class="btn btn-ghost note-pin-btn" id="note-pin-btn">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L8 10H3l5 4-2 8 6-5 6 5-2-8 5-4h-5z"/></svg>
                   Pin
                 </button>
               </div>
               <input type="text" id="note-title-input" placeholder="Note title..." maxlength="100" autocomplete="off" class="note-title-input" />
+
+              <div class="note-format-toolbar" id="note-format-toolbar" role="toolbar" aria-label="Note formatting">
+                <button type="button" id="note-bold-btn" aria-label="Bold" aria-pressed="false" title="Bold (Ctrl+B)"><strong>B</strong></button>
+                <button type="button" id="note-highlight-btn" aria-label="Highlight" aria-pressed="false" title="Highlight text"><span class="note-highlight-swatch">Highlight</span></button>
+              </div>
 
               <div class="note-editor-body">
                 <div class="note-checklist" id="note-checklist">
@@ -532,7 +539,7 @@
                   </div>
                 </div>
 
-                <textarea id="note-textarea" placeholder="Start writing..." class="note-textarea"></textarea>
+                <div id="note-textarea" class="note-textarea" aria-label="Note content"></div>
               </div>
             </div>
           </div>
@@ -745,12 +752,14 @@
   <!-- 6. Data layer -->
   <script src="js/db.js"></script>
   <script src="js/storage.js"></script>
+  <script src="vendor/quill/quill.js"></script>
 
   <!-- 7. UI modules -->
   <script src="js/gallery.js"></script>
   <script src="js/folders.js"></script>
   <script src="js/projects.js"></script>
   <script src="js/upload.js"></script>
+  <script src="js/note-format.js"></script>
   <script src="js/notes.js"></script>
   <script src="js/tasks.js"></script>
   <script src="js/admin.js"></script>

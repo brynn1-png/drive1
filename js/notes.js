@@ -10,6 +10,11 @@ const Notes = {
   _users: [],
   _activeNoteId: null,
   _saveTimer: null,
+  _saveQueue: Promise.resolve(),
+  _changeVersion: 0,
+  _savedVersion: 0,
+  _activeShared: false,
+  _canEdit: false,
 
   /* ------------------------------------------------------------------ */
   /*  Public API                                                          */
@@ -71,6 +76,7 @@ const Notes = {
         id: share.note_id,
         title: note.title || 'Untitled',
         content: note.content || '',
+        content_delta: note.content_delta || null,
         updated_at: note.updated_at,
         created_at: share.created_at,
         _isShared: true,
@@ -155,57 +161,33 @@ const Notes = {
   _openSharedNote(note) {
     const modal = document.getElementById('note-editor-modal');
     const titleInput = document.getElementById('note-title-input');
-    const textarea = document.getElementById('note-textarea');
     const pinBtn = document.getElementById('note-pin-btn');
     const backBtn = document.getElementById('note-back-btn');
     const canEdit = note._permission === 'edit';
 
+    this._ensureRichEditor();
+    this._activeNoteId = note.id;
+    this._activeShared = true;
+    this._canEdit = canEdit;
+    this._changeVersion = 0;
+    this._savedVersion = 0;
     titleInput.value = note.title || '';
-    textarea.value = note.content || '';
-    textarea.readOnly = !canEdit;
     titleInput.readOnly = !canEdit;
+    this._quill.setContents(note.content_delta ? NoteFormat.clean(note.content_delta) : NoteFormat.fromPlainText(note.content), 'silent');
+    this._quill.enable(canEdit);
+    document.getElementById('note-format-toolbar').hidden = !canEdit;
+    document.getElementById('note-checklist').hidden = true;
+    this._showSaved();
+    if (!canEdit) document.getElementById('note-save-status').textContent = 'View only';
 
     if (pinBtn) pinBtn.style.display = 'none';
-
-    const cleanup = () => {
-      modal.classList.add('hidden');
-      textarea.readOnly = false;
-      titleInput.readOnly = false;
-      if (pinBtn) pinBtn.style.display = '';
-      this._sharedSaveTimer = null;
-    };
-
-    if (backBtn) backBtn.onclick = cleanup;
-    modal.onclick = (e) => { if (e.target === modal) cleanup(); };
-
-    if (canEdit) {
-      let saveTimer = null;
-      const handler = () => {
-        clearTimeout(saveTimer);
-        saveTimer = setTimeout(() => this._autoSaveSharedNote(note.id, titleInput.value, textarea.value), 500);
-      };
-      titleInput.oninput = handler;
-      textarea.oninput = handler;
-    } else {
-      titleInput.oninput = null;
-      textarea.oninput = null;
-    }
+    if (backBtn) backBtn.onclick = () => this.closeNote();
+    modal.onclick = (e) => { if (e.target === modal) this.closeNote(); };
+    titleInput.oninput = canEdit ? () => this._scheduleSave() : null;
 
     modal.classList.remove('hidden');
-    if (canEdit) textarea.focus();
-  },
-
-  async _autoSaveSharedNote(noteId, title, content) {
-    try {
-      await DB.updateSharedNote(noteId, { title: title.trim() || 'Untitled', content });
-      const status = document.getElementById('note-save-status');
-      if (status) {
-        status.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Saved';
-        status.classList.remove('saving');
-      }
-    } catch (err) {
-      console.error('Shared note auto-save failed:', err);
-    }
+    this._resetExpanded();
+    if (canEdit) this._quill.focus();
   },
 
   openNote(id) {
@@ -215,14 +197,23 @@ const Notes = {
     this._activeNoteId = id;
 
     const titleInput = document.getElementById('note-title-input');
-    const textarea = document.getElementById('note-textarea');
     const backBtn = document.getElementById('note-back-btn');
     const pinBtn = document.getElementById('note-pin-btn');
 
     const editor = document.getElementById('note-editor-modal');
 
+    this._ensureRichEditor();
+    this._activeShared = false;
+    this._canEdit = true;
+    this._changeVersion = 0;
+    this._savedVersion = 0;
     titleInput.value = note.title || '';
-    textarea.value = note.content || '';
+    titleInput.readOnly = false;
+    this._quill.setContents(note.content_delta ? NoteFormat.clean(note.content_delta) : NoteFormat.fromPlainText(note.content), 'silent');
+    this._quill.enable(true);
+    document.getElementById('note-format-toolbar').hidden = false;
+    document.getElementById('note-checklist').hidden = false;
+    this._showSaved();
 
     if (backBtn) {
       backBtn.onclick = () => this.closeNote();
@@ -239,15 +230,24 @@ const Notes = {
     }
 
     editor.classList.remove('hidden');
-    textarea.focus();
-    this._attachAutoSave();
+    this._resetExpanded();
+    this._quill.focus();
+    titleInput.oninput = () => this._scheduleSave();
     this.loadChecklist(id);
   },
 
-  closeNote() {
+  async closeNote() {
+    try {
+      await this._saveCurrent();
+    } catch (err) {
+      Toast.show(`Could not save note: ${friendlyError(err)}`, 'error');
+      return;
+    }
     this._activeNoteId = null;
-    clearTimeout(this._saveTimer);
+    this._canEdit = false;
     document.getElementById('note-editor-modal').classList.add('hidden');
+    document.getElementById('note-title-input').oninput = null;
+    this._resetExpanded();
     this.render();
   },
 
@@ -339,19 +339,77 @@ const Notes = {
   /*  Auto-save                                                           */
   /* ------------------------------------------------------------------ */
 
-  _attachAutoSave() {
-    const titleInput = document.getElementById('note-title-input');
-    const textarea = document.getElementById('note-textarea');
-    if (!titleInput || !textarea) return;
-
-    const handler = () => {
-      this._showSaving();
-      clearTimeout(this._saveTimer);
-      this._saveTimer = setTimeout(() => this._autoSave(), 500);
+  _ensureRichEditor() {
+    if (this._quill) return;
+    if (typeof Quill === 'undefined') throw new Error('Rich-text editor failed to load. Reload the page and try again.');
+    this._quill = new Quill('#note-textarea', {
+      theme: null,
+      formats: ['bold', 'background'],
+      modules: { toolbar: false },
+      placeholder: 'Start writing...',
+    });
+    this._quill.on('text-change', (_change, _old, source) => {
+      if (source === 'user' && this._canEdit) this._scheduleSave();
+    });
+    this._quill.on('selection-change', () => this._updateFormatButtons());
+    const bold = document.getElementById('note-bold-btn');
+    const highlight = document.getElementById('note-highlight-btn');
+    for (const button of [bold, highlight]) button.addEventListener('mousedown', (e) => e.preventDefault());
+    bold.onclick = () => {
+      if (!this._canEdit) return;
+      this._quill.format('bold', !this._quill.getFormat().bold, 'user');
+      this._updateFormatButtons();
     };
+    highlight.onclick = () => {
+      if (!this._canEdit) return;
+      this._quill.format('background', this._quill.getFormat().background ? false : '#fff2a8', 'user');
+      this._updateFormatButtons();
+    };
+    document.getElementById('note-expand-btn').onclick = () => this._toggleExpanded();
+    document.addEventListener('keydown', (e) => {
+      const modal = document.getElementById('note-editor-modal');
+      if (e.key !== 'Escape' || modal.classList.contains('hidden')) return;
+      if (modal.classList.contains('note-expanded')) {
+        e.preventDefault();
+        this._resetExpanded();
+      }
+    });
+  },
 
-    titleInput.oninput = handler;
-    textarea.oninput = handler;
+  _updateFormatButtons() {
+    if (!this._quill) return;
+    const formats = this._quill.getFormat();
+    document.getElementById('note-bold-btn').setAttribute('aria-pressed', String(!!formats.bold));
+    document.getElementById('note-highlight-btn').setAttribute('aria-pressed', String(!!formats.background));
+  },
+
+  _toggleExpanded() {
+    const modal = document.getElementById('note-editor-modal');
+    modal.classList.toggle('note-expanded');
+    const expanded = modal.classList.contains('note-expanded');
+    const button = document.getElementById('note-expand-btn');
+    button.textContent = expanded ? 'Restore' : 'Expand';
+    button.setAttribute('aria-label', expanded ? 'Restore note size' : 'Expand note');
+    button.setAttribute('aria-pressed', String(expanded));
+  },
+
+  _resetExpanded() {
+    const modal = document.getElementById('note-editor-modal');
+    modal.classList.remove('note-expanded');
+    const button = document.getElementById('note-expand-btn');
+    button.textContent = 'Expand';
+    button.setAttribute('aria-label', 'Expand note');
+    button.setAttribute('aria-pressed', 'false');
+  },
+
+  _scheduleSave() {
+    this._changeVersion += 1;
+    this._showSaving();
+    clearTimeout(this._saveTimer);
+    this._saveTimer = setTimeout(() => this._saveCurrent().catch((err) => {
+      console.error('Note auto-save failed:', err);
+      document.getElementById('note-save-status').textContent = 'Save failed';
+    }), 500);
   },
 
   _showSaving() {
@@ -374,28 +432,35 @@ const Notes = {
     `;
   },
 
-  async _autoSave() {
-    if (!this._activeNoteId) return;
-
-    const titleInput = document.getElementById('note-title-input');
-    const textarea = document.getElementById('note-textarea');
-    if (!titleInput || !textarea) return;
-
-    const title = titleInput.value.trim() || 'Untitled';
-    const content = textarea.value;
-
-    try {
-      const updated = await DB.updateNote(this._activeNoteId, { title, content });
-      const idx = this._notes.findIndex((n) => n.id === this._activeNoteId);
-      if (idx !== -1) this._notes[idx] = updated;
-
-      const badge = document.getElementById('notes-count');
-      if (badge) badge.textContent = this._notes.length || '';
-
-      this._showSaved();
-    } catch (err) {
-      console.error('Auto-save failed:', err);
-    }
+  _saveCurrent() {
+    clearTimeout(this._saveTimer);
+    if (!this._activeNoteId || !this._canEdit || this._changeVersion === this._savedVersion) return this._saveQueue;
+    const id = this._activeNoteId;
+    const shared = this._activeShared;
+    const version = this._changeVersion;
+    const content_delta = NoteFormat.clean(this._quill.getContents());
+    const updates = {
+      title: document.getElementById('note-title-input').value.trim() || 'Untitled',
+      content: NoteFormat.toText(content_delta),
+      content_delta,
+    };
+    this._savedVersion = version;
+    this._saveQueue = this._saveQueue.catch(() => {}).then(async () => {
+      const updated = shared ? await DB.updateSharedNote(id, updates) : await DB.updateNote(id, updates);
+      if (shared) {
+        const share = this._sharedNotes.find((item) => item.note_id === id);
+        if (share) share.notes = { ...share.notes, ...updated };
+      } else {
+        const idx = this._notes.findIndex((item) => item.id === id);
+        if (idx !== -1) this._notes[idx] = updated;
+      }
+      if (this._activeNoteId === id && this._changeVersion === version) this._showSaved();
+      return updated;
+    }).catch((err) => {
+      if (this._activeNoteId === id) this._savedVersion = -1;
+      throw err;
+    });
+    return this._saveQueue;
   },
 
   /* ------------------------------------------------------------------ */

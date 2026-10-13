@@ -1,9 +1,19 @@
 # Decisions Log
 
-## Current State Summary (Updated: 2026-08-20)
+## Current State Summary (Updated: 2026-10-14)
 
-- **Latest Decision:** Note sharing permissions — "View only" / "Can edit" radio picker, click-to-toggle on existing shares
+- **Latest Decision:** Store restricted rich content in nullable `notes.content_delta`, retaining `content` as plain text
 - **In Progress:** None — permissions feature complete
+
+---
+
+## [2026-10-14] — Rich note content
+
+**Decision:** Use bundled Quill 2.0.3 with only bold and one highlight color. Save its restricted Delta in `content_delta` and plain text in the existing `content` column.
+
+**Why:** Existing notes and snippets remain readable; shared content can be rendered from a small allowlist; the app needs no build step or runtime CDN for the editor.
+
+**Alternative considered:** Hand-built `contenteditable` formatting would require maintaining browser selection, paste, and undo behavior.
 
 ---
 

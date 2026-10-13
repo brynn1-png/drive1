@@ -2,12 +2,12 @@
 title: MyDrive — System Overview
 tags: [mydrive, architecture, supabase, reference]
 aliases: [System Overview, MyDrive Overview]
-updated: 2026-07-27
+updated: 2026-10-14
 ---
 
 # MyDrive — System Overview
 
-Reference doc for future work on this app. Last updated 2026-07-27.
+Reference doc for future work on this app. Last updated 2026-10-14.
 
 > [!info] Related notes
 > - [[plan]] — original build plan / feature checklist (historical)
@@ -24,6 +24,9 @@ Auth + Storage). No backend server, no build step, no framework.
 - **Frontend**: plain HTML/CSS/vanilla JS (no bundler, no framework). Two visual themes
   (classic flat + [[theme-3d.css]]), five color palettes ([[palettes.css]]), switchable
   in Settings.
+- **Note editor**: bundled Quill 2.0.3 assets in `vendor/quill/`, limited to bold and
+  one highlight color. `js/note-format.js` converts restricted Delta content to
+  safe display HTML and plain text.
 - **Backend**: Supabase — Postgres database (via PostgREST/`supabase-js`), Supabase Auth
   (email/password), Supabase Storage (public `drive` bucket).
 - **Auth model**: the browser talks to Supabase directly using the **anon/public key**
@@ -65,6 +68,9 @@ Auth + Storage). No backend server, no build step, no framework.
   - [[005_add_note_id_to_tasks.sql]] — `tasks.note_id`
   - [[006_add_admin.sql]] — `profiles`, `admins`, the signup trigger
   - [[007_note_shares.sql]] — `note_shares` + note sharing RLS; opens `profiles` to all authenticated users
+  - `008_note_share_permissions.sql` — view/edit sharing permissions
+  - `009_file_shares.sql` — in-app file sharing
+  - `010_note_rich_content.sql` — nullable `notes.content_delta` for formatted notes
 
 Migrations are **not applied automatically** — there's no CLI/CI wiring. Any new
 `NNN_*.sql` file must be pasted into the Supabase Dashboard → SQL Editor and run by hand.
@@ -78,7 +84,7 @@ have RLS enabled with `select/insert/update/delete` policies scoped to `auth.uid
 |---|---|---|---|
 | `files` | uploaded file metadata | `filename`, `storage_path`, `size`, `file_type`, `folder` | [[001_create_tables.sql]] |
 | `folders` | user-created folders | `name` (unique per user) | [[001_create_tables.sql]] |
-| `notes` | notes | `title`, `content`, `pinned`, `updated_at` | [[schema.sql]] / [[004_add_pinned_to_notes.sql]] |
+| `notes` | notes | `title`, `content` (plain text), `content_delta` (formatted text), `pinned`, `updated_at` | [[schema.sql]] / `010_note_rich_content.sql` |
 | `tasks` | to-dos | `title`, `completed`, `due_date`, `project_id` (FK), `note_id` (FK) | [[schema.sql]] / [[002_add_projects.sql]] / [[005_add_note_id_to_tasks.sql]] |
 | `projects` | task groupings | `name` (unique per user) | [[002_add_projects.sql]] |
 | `note_shares` | read-access grants for notes | `note_id` (FK), `owner_user_id`, `shared_with_user_id` (unique pair) | [[007_note_shares.sql]] |
@@ -95,17 +101,14 @@ work for previews); `files.storage_path` points into it.
 - **Files**: upload (drag-drop or picker, via [[upload.js]]), grid/list view
   ([[gallery.js]]), folders ([[folders.js]]), move, download, delete, image lightbox
   preview.
-- **Notes** ([[notes.js]]): card grid → click to open a full editor modal; title +
-  content auto-save (500ms debounce); pin-to-top; per-note checklist (backed by
-  `tasks.note_id`).
+- **Notes** ([[notes.js]]): card grid → editor modal with Expand / Restore, bold,
+  highlight, and 500ms auto-save; pin-to-top; per-note checklist (backed by
+  `tasks.note_id`). Existing plain-text notes load without conversion until edited.
 - **Tasks** ([[tasks.js]]): grouped by project ([[projects.js]]); project cards double
   as rename/delete entry points.
-- **Share** ([[share.js]]): pick one or more of your notes and one or more registered
-  users to share them with (single or batch); see who each note is shared with and
-  revoke; a "Shared with me" section shows notes others shared with you, read-only.
-  Recipients are picked from `profiles` (readable by all authenticated users since
-  [[007_note_shares.sql]]). RLS keeps the note owner as the only writer — recipients
-  can read but never edit, pin, or delete the note.
+- **Share** ([[share.js]]): pick notes and registered recipients, then grant view or
+  edit access; see and revoke grants. Shared notes display formatting safely. RLS
+  enforces the selected permission; recipients cannot pin or delete the note.
 - **Settings**: appearance (theme + color palette), storage usage meter, change
   password ([[auth.js]]), admin panel (if applicable), sign out.
 - **Admin panel** ([[admin.js]]): visible only to accounts listed in the `admins`

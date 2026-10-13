@@ -32,7 +32,8 @@ html.theme-3d {
 /* Rounded, friendly sans instead of the brutalist theme's monospace —
    the sharp-edged Space Mono clashed with the soft/elevated 3D look. */
 html.theme-3d body,
-html.theme-3d .note-textarea {
+html.theme-3d .note-textarea,
+html.theme-3d .note-textarea .ql-editor {
   font-family: 'Poppins', 'Segoe UI', sans-serif;
 }
 

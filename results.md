@@ -1,9 +1,19 @@
 # Results Log
 
-## Current State Summary (Updated: 2026-08-20)
+## Current State Summary (Updated: 2026-10-14)
 
-- **Latest Result:** Note sharing permissions implemented. Verified via `node --check`.
-- **Verified:** `node --check` clean on notes.js, share.js, db.js
+- **Latest Result:** Expandable rich note editor implemented locally.
+- **Verified:** Node unit tests and headless Chrome editor smoke checks pass; live Supabase verification pending migration 010.
+
+---
+
+## [2026-10-14] — Note editor expansion and formatting
+
+**Outcome:** Expand / Restore, bold, yellow highlight, and shared-note rendering added. Pending edits are saved when the modal closes.
+
+**Verification:** `node --test tests/note-format.test.js` passed; Chrome smoke checks passed for formatting, expansion, close-save, and shared view/edit modes. No signed-in Supabase test was available in this workspace.
+
+**Deployment step:** Run `supabase/migrations/010_note_rich_content.sql` in Supabase SQL Editor before using the updated app.
 
 ---
 
