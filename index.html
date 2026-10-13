@@ -510,6 +510,9 @@
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                   Saved
                 </span>
+                <button class="btn btn-ghost note-find-btn" id="note-find-btn" type="button" aria-label="Find in note" aria-expanded="false" aria-controls="note-find-bar" title="Find in note">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16" y2="16"/></svg>
+                </button>
                 <button class="btn btn-ghost note-expand-btn" id="note-expand-btn" type="button" aria-label="Expand note" aria-pressed="false" title="Expand note">Expand</button>
                 <button class="btn btn-ghost note-pin-btn" id="note-pin-btn">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L8 10H3l5 4-2 8 6-5 6 5-2-8 5-4h-5z"/></svg>
@@ -517,6 +520,23 @@
                 </button>
               </div>
               <input type="text" id="note-title-input" placeholder="Note title..." maxlength="100" autocomplete="off" class="note-title-input" />
+
+              <div class="note-find-bar" id="note-find-bar" role="search" aria-label="Find in note" hidden>
+                <input type="search" id="note-find-input" placeholder="Find in this note..." aria-label="Find text in this note" autocomplete="off" spellcheck="false" />
+                <span class="note-find-count" id="note-find-count" aria-live="polite"></span>
+                <button type="button" id="note-find-prev" aria-label="Previous match" title="Previous match">↑</button>
+                <button type="button" id="note-find-next" aria-label="Next match" title="Next match">↓</button>
+                <button type="button" id="note-find-close" aria-label="Close find" title="Close find">×</button>
+              </div>
+
+              <div class="note-mobile-sections" id="note-mobile-sections">
+                <button type="button" class="note-section-toggle" id="note-tools-toggle" aria-expanded="false" aria-controls="note-format-toolbar">
+                  Tools <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <button type="button" class="note-section-toggle" id="note-checklist-toggle" aria-expanded="false" aria-controls="note-checklist">
+                  Checklist <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+              </div>
 
               <div class="note-format-toolbar" id="note-format-toolbar" role="toolbar" aria-label="Note formatting">
                 <button type="button" id="note-bold-btn" aria-label="Bold" aria-pressed="false" title="Bold (Ctrl+B)"><strong>B</strong></button>

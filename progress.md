@@ -2,11 +2,35 @@
 
 ## Current State Summary (Updated: 2026-10-14)
 
-- **Active Task:** Note editor expansion and formatting
+- **Active Task:** Find within an open note
 - **Status:** 🟢 Implemented locally; Supabase migration and live account test remain
 - **Next Action:** Run migration 010 in the Supabase SQL Editor, then test with a signed-in account
 - **Blockers:** None
-- **Last Completed:** Local note editor implementation on 2026-10-14
+- **Last Completed:** In-note Find on 2026-10-14
+
+---
+
+## [2026-10-14] — Find within an open note
+
+**Status:** 🟢 Implemented locally
+**Summary:** Added in-note search with match counts, next/previous navigation, and keyboard controls for owned and shared notes.
+**Steps completed:**
+
+- [x] Added Find controls to the note modal without changing note content
+- [x] Reset search when closing or opening another note
+- [x] Verified case-insensitive matching, formatted text, no-match state, keyboard navigation, view-only notes, and no search-triggered saves in Chrome
+
+---
+
+## [2026-10-14] — Collapsible note tools and checklist
+
+**Status:** 🟢 Implemented locally
+**Summary:** Tools and Checklist start collapsed on screens up to 1024px and can be expanded independently.
+**Steps completed:**
+
+- [x] Added accessible toggles and responsive layout
+- [x] Reset toggle state on each note open and respect shared-note permissions
+- [x] Verified phone-range, tablet, and desktop layouts in headless Chrome
 
 ---
 

@@ -2,8 +2,24 @@
 
 ## Current State Summary (Updated: 2026-10-14)
 
-- **Latest Result:** Expandable rich note editor implemented locally.
-- **Verified:** Node unit tests and headless Chrome editor smoke checks pass; live Supabase verification pending migration 010.
+- **Latest Result:** Find works inside an open note, including formatted and view-only shared notes.
+- **Verified:** Headless Chrome checks passed at compact and desktop widths; live Supabase verification still awaits migration 010.
+
+---
+
+## [2026-10-14] — In-note Find
+
+**Outcome:** Added case-insensitive search with match counts and Previous/Next navigation. Enter and Shift+Enter navigate matches; closing the note clears the query. Search does not save or change note content.
+
+**Verification:** Headless Chrome smoke checks passed at effective inner widths 500px, 884px, and 1264px. No signed-in Supabase test was available.
+
+---
+
+## [2026-10-14] — Collapsible note controls
+
+**Outcome:** Phone and tablet layouts show compact Tools and Checklist buttons with both sections collapsed when a note opens. Desktop displays the existing sections.
+
+**Verification:** Headless Chrome smoke check passed at requested 390px, 900px, and 1280px windows (Chrome's effective inner widths were 500px, 884px, and 1264px). View-only shared notes hide both controls; editable shared notes show Tools only.
 
 ---
 

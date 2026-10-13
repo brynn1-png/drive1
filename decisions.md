@@ -2,8 +2,24 @@
 
 ## Current State Summary (Updated: 2026-10-14)
 
-- **Latest Decision:** Store restricted rich content in nullable `notes.content_delta`, retaining `content` as plain text
+- **Latest Decision:** Find searches the open note body in memory, without changing saved content
 - **In Progress:** None — permissions feature complete
+
+---
+
+## [2026-10-14] — In-note Find
+
+**Decision:** Search Quill's plain-text view of the currently open note. Show match count and select/scroll to one match at a time with Previous/Next or Enter/Shift+Enter. Keep Find available in view-only shared notes.
+
+**Why:** The user specified search inside the open note; using the existing editor text requires no schema or backend change and does not alter formatting.
+
+---
+
+## [2026-10-14] — Compact note layout
+
+**Decision:** Show two independent disclosure buttons on phone and tablet widths; both start collapsed for owned notes. Shared notes only show controls permitted for their mode. Desktop keeps the existing toolbar and checklist visible.
+
+**Why:** The checklist and toolbar occupy most of the initial small-screen view, pushing note content down.
 
 ---
 

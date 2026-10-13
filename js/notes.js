@@ -15,6 +15,8 @@ const Notes = {
   _savedVersion: 0,
   _activeShared: false,
   _canEdit: false,
+  _findMatches: [],
+  _findPosition: -1,
 
   /* ------------------------------------------------------------------ */
   /*  Public API                                                          */
@@ -175,8 +177,10 @@ const Notes = {
     titleInput.readOnly = !canEdit;
     this._quill.setContents(note.content_delta ? NoteFormat.clean(note.content_delta) : NoteFormat.fromPlainText(note.content), 'silent');
     this._quill.enable(canEdit);
+    this._resetFind();
     document.getElementById('note-format-toolbar').hidden = !canEdit;
     document.getElementById('note-checklist').hidden = true;
+    this._resetCompactSections(canEdit, false);
     this._showSaved();
     if (!canEdit) document.getElementById('note-save-status').textContent = 'View only';
 
@@ -211,8 +215,10 @@ const Notes = {
     titleInput.readOnly = false;
     this._quill.setContents(note.content_delta ? NoteFormat.clean(note.content_delta) : NoteFormat.fromPlainText(note.content), 'silent');
     this._quill.enable(true);
+    this._resetFind();
     document.getElementById('note-format-toolbar').hidden = false;
     document.getElementById('note-checklist').hidden = false;
+    this._resetCompactSections(true, true);
     this._showSaved();
 
     if (backBtn) {
@@ -247,6 +253,7 @@ const Notes = {
     this._canEdit = false;
     document.getElementById('note-editor-modal').classList.add('hidden');
     document.getElementById('note-title-input').oninput = null;
+    this._resetFind();
     this._resetExpanded();
     this.render();
   },
@@ -349,7 +356,10 @@ const Notes = {
       placeholder: 'Start writing...',
     });
     this._quill.on('text-change', (_change, _old, source) => {
-      if (source === 'user' && this._canEdit) this._scheduleSave();
+      if (source === 'user' && this._canEdit) {
+        this._scheduleSave();
+        if (!document.getElementById('note-find-bar').hidden) this._refreshFind();
+      }
     });
     this._quill.on('selection-change', () => this._updateFormatButtons());
     const bold = document.getElementById('note-bold-btn');
@@ -366,9 +376,31 @@ const Notes = {
       this._updateFormatButtons();
     };
     document.getElementById('note-expand-btn').onclick = () => this._toggleExpanded();
+    document.getElementById('note-find-btn').onclick = () => this._toggleFind();
+    document.getElementById('note-find-close').onclick = () => {
+      this._resetFind();
+      document.getElementById('note-find-btn').focus();
+    };
+    document.getElementById('note-find-input').oninput = () => this._refreshFind();
+    document.getElementById('note-find-next').onclick = () => this._stepFind(1);
+    document.getElementById('note-find-prev').onclick = () => this._stepFind(-1);
+    document.getElementById('note-find-input').onkeydown = (e) => {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      this._stepFind(e.shiftKey ? -1 : 1);
+      e.currentTarget.focus({ preventScroll: true });
+    };
+    document.getElementById('note-tools-toggle').onclick = () => this._toggleCompactSection('note-tools-toggle', 'note-format-toolbar');
+    document.getElementById('note-checklist-toggle').onclick = () => this._toggleCompactSection('note-checklist-toggle', 'note-checklist');
     document.addEventListener('keydown', (e) => {
       const modal = document.getElementById('note-editor-modal');
       if (e.key !== 'Escape' || modal.classList.contains('hidden')) return;
+      if (!document.getElementById('note-find-bar').hidden) {
+        e.preventDefault();
+        this._resetFind();
+        document.getElementById('note-find-btn').focus();
+        return;
+      }
       if (modal.classList.contains('note-expanded')) {
         e.preventDefault();
         this._resetExpanded();
@@ -381,6 +413,79 @@ const Notes = {
     const formats = this._quill.getFormat();
     document.getElementById('note-bold-btn').setAttribute('aria-pressed', String(!!formats.bold));
     document.getElementById('note-highlight-btn').setAttribute('aria-pressed', String(!!formats.background));
+  },
+
+  _toggleFind() {
+    const bar = document.getElementById('note-find-bar');
+    if (!bar.hidden) return this._resetFind();
+    bar.hidden = false;
+    document.getElementById('note-find-btn').setAttribute('aria-expanded', 'true');
+    document.getElementById('note-find-count').textContent = 'Type to find';
+    document.getElementById('note-find-input').focus();
+  },
+
+  _resetFind() {
+    if (this._findPosition >= 0) this._quill.setSelection(null, 'silent');
+    document.getElementById('note-find-bar').hidden = true;
+    document.getElementById('note-find-btn').setAttribute('aria-expanded', 'false');
+    document.getElementById('note-find-input').value = '';
+    document.getElementById('note-find-count').textContent = '';
+    this._findMatches = [];
+    this._findPosition = -1;
+    document.getElementById('note-find-prev').disabled = true;
+    document.getElementById('note-find-next').disabled = true;
+  },
+
+  _refreshFind() {
+    const query = document.getElementById('note-find-input').value.trim().toLowerCase();
+    const count = document.getElementById('note-find-count');
+    if (this._findPosition >= 0) this._quill.setSelection(null, 'silent');
+    this._findMatches = [];
+    this._findPosition = -1;
+    if (query) {
+      const text = this._quill.getText().toLowerCase();
+      let from = 0;
+      let index;
+      while ((index = text.indexOf(query, from)) !== -1) {
+        this._findMatches.push({ index, length: query.length });
+        from = index + query.length;
+      }
+    }
+    count.textContent = !query ? 'Type to find' : this._findMatches.length ? `${this._findMatches.length} ${this._findMatches.length === 1 ? 'match' : 'matches'}` : 'No matches';
+    const disabled = this._findMatches.length === 0;
+    document.getElementById('note-find-prev').disabled = disabled;
+    document.getElementById('note-find-next').disabled = disabled;
+  },
+
+  _stepFind(direction) {
+    if (!this._findMatches.length) return;
+    const count = this._findMatches.length;
+    this._findPosition = this._findPosition < 0
+      ? (direction > 0 ? 0 : count - 1)
+      : (this._findPosition + direction + count) % count;
+    const match = this._findMatches[this._findPosition];
+    this._quill.setSelection(match.index, match.length, 'api');
+    document.getElementById('note-find-count').textContent = `${this._findPosition + 1} of ${count}`;
+  },
+
+  _resetCompactSections(showTools, showChecklist) {
+    document.getElementById('note-mobile-sections').hidden = !showTools && !showChecklist;
+    for (const [buttonId, sectionId, visible] of [
+      ['note-tools-toggle', 'note-format-toolbar', showTools],
+      ['note-checklist-toggle', 'note-checklist', showChecklist],
+    ]) {
+      const button = document.getElementById(buttonId);
+      button.hidden = !visible;
+      button.setAttribute('aria-expanded', 'false');
+      document.getElementById(sectionId).classList.add('is-collapsed');
+    }
+  },
+
+  _toggleCompactSection(buttonId, sectionId) {
+    const button = document.getElementById(buttonId);
+    const section = document.getElementById(sectionId);
+    const expanded = section.classList.toggle('is-collapsed') === false;
+    button.setAttribute('aria-expanded', String(expanded));
   },
 
   _toggleExpanded() {

@@ -7,12 +7,14 @@
   <div class="modal-card note-editor-modal-card"><div class="note-editor">
     <div class="note-editor-header">
       <button id="note-back-btn">Close</button><span id="note-save-status"></span>
-      <button id="note-expand-btn">Expand</button><button id="note-pin-btn">Pin</button>
+      <button id="note-find-btn" aria-expanded="false">Find</button><button id="note-expand-btn">Expand</button><button id="note-pin-btn">Pin</button>
     </div>
     <input id="note-title-input">
-    <div id="note-format-toolbar"><button id="note-bold-btn"></button><button id="note-highlight-btn"></button></div>
+    <div id="note-find-bar" class="note-find-bar" hidden><input id="note-find-input"><span id="note-find-count"></span><button id="note-find-prev"></button><button id="note-find-next"></button><button id="note-find-close"></button></div>
+    <div id="note-mobile-sections" class="note-mobile-sections"><button id="note-tools-toggle" class="note-section-toggle" aria-expanded="false"></button><button id="note-checklist-toggle" class="note-section-toggle" aria-expanded="false"></button></div>
+    <div id="note-format-toolbar" class="note-format-toolbar"><button id="note-bold-btn"></button><button id="note-highlight-btn"></button></div>
     <div class="note-editor-body">
-      <div id="note-checklist"><div id="note-checklist-list"></div><span id="note-checklist-count"></span></div>
+      <div id="note-checklist" class="note-checklist"><div id="note-checklist-list"></div><span id="note-checklist-count"></span></div>
       <div id="note-textarea" class="note-textarea"></div>
     </div>
   </div></div>
@@ -36,6 +38,17 @@
     try {
       Notes._notes = [{ id: 'n1', title: 'Old note', content: 'Hello world' }];
       Notes.openNote('n1');
+      const compact = matchMedia('(max-width: 1024px)').matches;
+      const visible = (id) => getComputedStyle(document.getElementById(id)).display !== 'none';
+      if (compact && (!visible('note-mobile-sections') || visible('note-format-toolbar') || visible('note-checklist'))) throw new Error('compact sections are not collapsed visually');
+      if (!compact && (visible('note-mobile-sections') || !visible('note-format-toolbar') || !visible('note-checklist'))) throw new Error('desktop sections are hidden');
+      if (!document.getElementById('note-format-toolbar').classList.contains('is-collapsed')) throw new Error('tools start expanded');
+      if (!document.getElementById('note-checklist').classList.contains('is-collapsed')) throw new Error('checklist starts expanded');
+      document.getElementById('note-tools-toggle').click();
+      if (document.getElementById('note-tools-toggle').getAttribute('aria-expanded') !== 'true') throw new Error('tools did not expand');
+      document.getElementById('note-checklist-toggle').click();
+      if (document.getElementById('note-checklist-toggle').getAttribute('aria-expanded') !== 'true') throw new Error('checklist did not expand');
+      if (compact && (!visible('note-format-toolbar') || !visible('note-checklist'))) throw new Error('compact sections did not expand visually');
       Notes._quill.formatText(0, 5, 'bold', true, 'user');
       Notes._quill.formatText(6, 5, 'background', '#fff2a8', 'user');
       Notes._toggleExpanded();
@@ -45,15 +58,54 @@
       if (saved.length !== 1 || saved[0].content !== 'Hello world') throw new Error('save failed');
       if (NoteFormat.toHtml(saved[0].content_delta) !== '<strong>Hello</strong> <mark>world</mark>') throw new Error('formatting lost');
       if (!document.getElementById('note-editor-modal').classList.contains('hidden')) throw new Error('close failed');
+      Notes._notes.push({ id: 'n2', title: 'Find', content: 'Hello world hello', content_delta: { ops: [
+        { insert: 'Hello', attributes: { bold: true } }, { insert: ' world hello\n' },
+      ] } });
+      Notes.openNote('n2');
+      document.getElementById('note-find-btn').click();
+      if (document.getElementById('note-find-bar').hidden) throw new Error('find did not open');
+      const findBar = document.getElementById('note-find-bar');
+      if (findBar.scrollWidth > findBar.clientWidth + 1) throw new Error('find bar overflows at this width');
+      const findInput = document.getElementById('note-find-input');
+      findInput.value = 'HELLO';
+      findInput.dispatchEvent(new Event('input', { bubbles: true }));
+      if (document.getElementById('note-find-count').textContent !== '2 matches') throw new Error('case-insensitive match count is wrong');
+      document.getElementById('note-find-next').click();
+      if (Notes._quill.getSelection()?.index !== 0) throw new Error('next did not find first match');
+      document.getElementById('note-find-next').click();
+      if (Notes._quill.getSelection()?.index !== 12) throw new Error('next did not find second match');
+      document.getElementById('note-find-prev').click();
+      if (Notes._quill.getSelection()?.index !== 0) throw new Error('previous did not return to first match');
+      findInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      if (Notes._findPosition !== 1 || document.activeElement !== findInput) throw new Error('Enter did not advance find while keeping input focus');
+      findInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', shiftKey: true, bubbles: true }));
+      if (Notes._findPosition !== 0) throw new Error('Shift+Enter did not move back');
+      findInput.value = 'missing';
+      findInput.dispatchEvent(new Event('input', { bubbles: true }));
+      if (document.getElementById('note-find-count').textContent !== 'No matches') throw new Error('no-match message missing');
+      await Notes.closeNote();
+      if (!document.getElementById('note-find-bar').hidden || findInput.value) throw new Error('find did not reset on close');
+      if (saved.length !== 1) throw new Error('finding triggered a save');
       Notes._openSharedNote({ id: 's1', title: 'Shared', content: 'Read me', _permission: 'view' });
+      document.getElementById('note-find-btn').click();
+      findInput.value = 'READ';
+      findInput.dispatchEvent(new Event('input', { bubbles: true }));
+      if (document.getElementById('note-find-count').textContent !== '1 match') throw new Error('view-only note cannot be searched: ' + document.getElementById('note-find-count').textContent);
+      document.getElementById('note-find-next').click();
+      if (document.getElementById('note-find-count').textContent !== '1 of 1') throw new Error('view-only match cannot be navigated');
+      if (window.getSelection().toString().toLowerCase() !== 'read') throw new Error('view-only match was not selected');
+      findInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      if (!document.getElementById('note-find-bar').hidden || document.activeElement !== document.getElementById('note-find-btn')) throw new Error('Escape did not close find');
       if (Notes._quill.isEnabled() || !document.getElementById('note-format-toolbar').hidden) throw new Error('view-only share is editable');
+      if (!document.getElementById('note-mobile-sections').hidden) throw new Error('view-only share shows toggles');
       await Notes.closeNote();
       if (saved.length !== 1) throw new Error('view-only share saved changes');
       Notes._openSharedNote({ id: 's2', title: 'Shared edit', content: 'Edit me', _permission: 'edit' });
+      if (document.getElementById('note-tools-toggle').hidden || !document.getElementById('note-checklist-toggle').hidden) throw new Error('shared edit shows wrong toggles');
       Notes._quill.formatText(0, 4, 'bold', true, 'user');
       await Notes.closeNote();
       if (saved.length !== 2 || saved[1].content !== 'Edit me') throw new Error('shared edit was not saved');
-      document.getElementById('result').textContent = 'PASS';
+      document.getElementById('result').textContent = `PASS ${innerWidth}px ${compact ? 'compact' : 'desktop'}`;
     } catch (error) { document.getElementById('result').textContent = 'FAIL: ' + error.message; }
   })();
 </script>

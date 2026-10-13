@@ -101,9 +101,11 @@ work for previews); `files.storage_path` points into it.
 - **Files**: upload (drag-drop or picker, via [[upload.js]]), grid/list view
   ([[gallery.js]]), folders ([[folders.js]]), move, download, delete, image lightbox
   preview.
-- **Notes** ([[notes.js]]): card grid → editor modal with Expand / Restore, bold,
-  highlight, and 500ms auto-save; pin-to-top; per-note checklist (backed by
-  `tasks.note_id`). Existing plain-text notes load without conversion until edited.
+- **Notes** ([[notes.js]]): card grid → editor modal with Expand / Restore, in-note
+  Find, bold, highlight, and 500ms auto-save; pin-to-top; per-note checklist (backed by
+  `tasks.note_id`). On phone and tablet widths, Tools and Checklist start collapsed
+  and can be opened independently. Existing plain-text notes load without
+  conversion until edited.
 - **Tasks** ([[tasks.js]]): grouped by project ([[projects.js]]); project cards double
   as rename/delete entry points.
 - **Share** ([[share.js]]): pick notes and registered recipients, then grant view or
