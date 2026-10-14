@@ -3,7 +3,7 @@
 ## Current State Summary (Updated: 2026-10-15)
 
 - **Latest Result:** Clicking the title of an open note now keeps focus there and types into the title.
-- **Verified:** Headless Chrome checks passed at compact and desktop widths; live Supabase verification still awaits migration 010.
+- **Verified:** Headless Chrome checks passed at compact and desktop widths; remote publication was rejected by automatic approval review and live Supabase verification remains outstanding.
 
 ---
 
@@ -12,6 +12,7 @@
 **Outcome:** Fixed the Quill formatting-status callback that pulled focus from the title input back into the note body. Added a browser regression that performs a real click and inserts text.
 
 **Verification:** Real-click regression passed at requested 390px and 1280px windows; complete note-editor smoke passed at effective 1264px desktop width; four note-format tests, syntax checks, and `git diff --check` passed. Signed-in Supabase verification remains outstanding.
+**Publication:** Local commit `6e1eb79` is one commit ahead of `origin/main`. Automatic approval review rejected `git push origin main` because publishing a private repository to an unverified remote needs explicit authorization.
 
 ---
 

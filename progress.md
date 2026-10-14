@@ -3,9 +3,9 @@
 ## Current State Summary (Updated: 2026-10-15)
 
 - **Active Task:** Open-note title focus
-- **Status:** 🟢 Fixed and browser tested locally; Supabase migration and live account test remain
-- **Next Action:** Run migration 010 for formatted note content, then test with a signed-in account
-- **Blockers:** None
+- **Status:** 🟢 Fixed, browser tested, and committed locally; remote publication pending approval
+- **Next Action:** Publish the fix after explicit approval, then test with a signed-in account; migration 010 remains needed for formatted content
+- **Blockers:** Automatic approval review rejected the push to the unverified private GitHub remote without explicit authorization
 - **Last Completed:** Open-note title focus on 2026-10-15
 
 ---
@@ -15,6 +15,7 @@
 **Status:** 🟢 Fixed locally
 **Summary:** Reproduced the title click moving focus back to the note body. A Quill `selection-change` callback called `getFormat()` after the editor blurred, which caused Quill to focus the body again. Formatting controls now update only while the body has focus.
 **Verification:** Real mouse click and typing passed in headless Chrome at phone and desktop widths. The complete note-editor smoke check, four note-format tests, syntax checks, and diff check passed.
+**Publication:** Committed locally as `6e1eb79`; a push to `origin/main` was rejected by automatic approval review pending explicit user authorization.
 
 ---
 

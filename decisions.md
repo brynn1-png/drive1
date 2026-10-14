@@ -3,7 +3,7 @@
 ## Current State Summary (Updated: 2026-10-15)
 
 - **Latest Decision:** Skip Quill formatting checks when the note body has lost focus, so a title click stays in the title input
-- **In Progress:** None — permissions feature complete
+- **In Progress:** Remote publication awaits explicit user authorization after automatic approval review rejected the push
 
 ---
 
@@ -12,6 +12,7 @@
 **Decision:** Guard `_updateFormatButtons()` with Quill's `hasFocus()` before calling `getFormat()`.
 
 **Why:** A real-click trace showed the title input receiving focus, then Quill's `getFormat()` taking focus back when the editor's selection changed on blur. The guard prevents the focus steal without changing title input or editor behavior.
+**Publication decision:** Keep the verified fix in the local commit until the user explicitly authorizes pushing this private repository to `origin/main`.
 
 ---
 
