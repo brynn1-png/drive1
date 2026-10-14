@@ -13,6 +13,8 @@ const Notes = {
   _saveQueue: Promise.resolve(),
   _changeVersion: 0,
   _savedVersion: 0,
+  _titleChangeVersion: 0,
+  _contentChangeVersion: 0,
   _activeShared: false,
   _canEdit: false,
   _findMatches: [],
@@ -173,6 +175,8 @@ const Notes = {
     this._canEdit = canEdit;
     this._changeVersion = 0;
     this._savedVersion = 0;
+    this._titleChangeVersion = 0;
+    this._contentChangeVersion = 0;
     titleInput.value = note.title || '';
     titleInput.readOnly = !canEdit;
     this._quill.setContents(note.content_delta ? NoteFormat.clean(note.content_delta) : NoteFormat.fromPlainText(note.content), 'silent');
@@ -187,7 +191,7 @@ const Notes = {
     if (pinBtn) pinBtn.style.display = 'none';
     if (backBtn) backBtn.onclick = () => this.closeNote();
     modal.onclick = (e) => { if (e.target === modal) this.closeNote(); };
-    titleInput.oninput = canEdit ? () => this._scheduleSave() : null;
+    titleInput.oninput = canEdit ? () => this._scheduleSave('title') : null;
 
     modal.classList.remove('hidden');
     this._resetExpanded();
@@ -211,6 +215,8 @@ const Notes = {
     this._canEdit = true;
     this._changeVersion = 0;
     this._savedVersion = 0;
+    this._titleChangeVersion = 0;
+    this._contentChangeVersion = 0;
     titleInput.value = note.title || '';
     titleInput.readOnly = false;
     this._quill.setContents(note.content_delta ? NoteFormat.clean(note.content_delta) : NoteFormat.fromPlainText(note.content), 'silent');
@@ -238,7 +244,7 @@ const Notes = {
     editor.classList.remove('hidden');
     this._resetExpanded();
     this._quill.focus();
-    titleInput.oninput = () => this._scheduleSave();
+    titleInput.oninput = () => this._scheduleSave('title');
     this.loadChecklist(id);
   },
 
@@ -265,7 +271,7 @@ const Notes = {
     const cancelBtn = document.getElementById('note-create-cancel');
 
     input.value = '';
-    modal.classList.remove('hidden');
+    Confirm.showModal('note-create-modal');
     setTimeout(() => input.focus(), 50);
 
     const cleanup = () => {
@@ -357,7 +363,7 @@ const Notes = {
     });
     this._quill.on('text-change', (_change, _old, source) => {
       if (source === 'user' && this._canEdit) {
-        this._scheduleSave();
+        this._scheduleSave('content');
         if (!document.getElementById('note-find-bar').hidden) this._refreshFind();
       }
     });
@@ -409,7 +415,7 @@ const Notes = {
   },
 
   _updateFormatButtons() {
-    if (!this._quill) return;
+    if (!this._quill?.hasFocus()) return;
     const formats = this._quill.getFormat();
     document.getElementById('note-bold-btn').setAttribute('aria-pressed', String(!!formats.bold));
     document.getElementById('note-highlight-btn').setAttribute('aria-pressed', String(!!formats.background));
@@ -507,8 +513,10 @@ const Notes = {
     button.setAttribute('aria-pressed', 'false');
   },
 
-  _scheduleSave() {
+  _scheduleSave(field) {
     this._changeVersion += 1;
+    if (field === 'title') this._titleChangeVersion = this._changeVersion;
+    if (field === 'content') this._contentChangeVersion = this._changeVersion;
     this._showSaving();
     clearTimeout(this._saveTimer);
     this._saveTimer = setTimeout(() => this._saveCurrent().catch((err) => {
@@ -543,12 +551,15 @@ const Notes = {
     const id = this._activeNoteId;
     const shared = this._activeShared;
     const version = this._changeVersion;
-    const content_delta = NoteFormat.clean(this._quill.getContents());
-    const updates = {
-      title: document.getElementById('note-title-input').value.trim() || 'Untitled',
-      content: NoteFormat.toText(content_delta),
-      content_delta,
-    };
+    const updates = {};
+    if (this._titleChangeVersion > this._savedVersion) {
+      updates.title = document.getElementById('note-title-input').value.trim() || 'Untitled';
+    }
+    if (this._contentChangeVersion > this._savedVersion) {
+      const content_delta = NoteFormat.clean(this._quill.getContents());
+      updates.content = NoteFormat.toText(content_delta);
+      updates.content_delta = content_delta;
+    }
     this._savedVersion = version;
     this._saveQueue = this._saveQueue.catch(() => {}).then(async () => {
       const updated = shared ? await DB.updateSharedNote(id, updates) : await DB.updateNote(id, updates);

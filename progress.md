@@ -1,12 +1,28 @@
 # Progress Log
 
-## Current State Summary (Updated: 2026-10-14)
+## Current State Summary (Updated: 2026-10-15)
 
-- **Active Task:** Find within an open note
-- **Status:** 🟢 Implemented locally; Supabase migration and live account test remain
-- **Next Action:** Run migration 010 in the Supabase SQL Editor, then test with a signed-in account
+- **Active Task:** Open-note title focus
+- **Status:** 🟢 Fixed and browser tested locally; Supabase migration and live account test remain
+- **Next Action:** Run migration 010 for formatted note content, then test with a signed-in account
 - **Blockers:** None
-- **Last Completed:** In-note Find on 2026-10-14
+- **Last Completed:** Open-note title focus on 2026-10-15
+
+---
+
+## [2026-10-15] — Open-note title focus
+
+**Status:** 🟢 Fixed locally
+**Summary:** Reproduced the title click moving focus back to the note body. A Quill `selection-change` callback called `getFormat()` after the editor blurred, which caused Quill to focus the body again. Formatting controls now update only while the body has focus.
+**Verification:** Real mouse click and typing passed in headless Chrome at phone and desktop widths. The complete note-editor smoke check, four note-format tests, syntax checks, and diff check passed.
+
+---
+
+## [2026-10-15] — Note title entry and rename reliability
+
+**Status:** 🟢 Fixed locally
+**Summary:** Reproduced the create dialog disappearing on quick reopen and title-only renames failing against a schema without `content_delta`. Reopening now cancels the pending modal close. Title-only edits save only the title; content edits still save plain text and rich-text data together.
+**Verification:** Local Chrome smoke passed at 500px and 1264px effective widths, including title text entry, create, rename, and combined title/content edits. Four note-format tests passed. A signed-in Supabase test remains outstanding.
 
 ---
 

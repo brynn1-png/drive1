@@ -1,9 +1,25 @@
 # Results Log
 
-## Current State Summary (Updated: 2026-10-14)
+## Current State Summary (Updated: 2026-10-15)
 
-- **Latest Result:** Find works inside an open note, including formatted and view-only shared notes.
+- **Latest Result:** Clicking the title of an open note now keeps focus there and types into the title.
 - **Verified:** Headless Chrome checks passed at compact and desktop widths; live Supabase verification still awaits migration 010.
+
+---
+
+## [2026-10-15] — Open-note title focus
+
+**Outcome:** Fixed the Quill formatting-status callback that pulled focus from the title input back into the note body. Added a browser regression that performs a real click and inserts text.
+
+**Verification:** Real-click regression passed at requested 390px and 1280px windows; complete note-editor smoke passed at effective 1264px desktop width; four note-format tests, syntax checks, and `git diff --check` passed. Signed-in Supabase verification remains outstanding.
+
+---
+
+## [2026-10-15] — Note title entry and rename reliability
+
+**Outcome:** Reproduced the quick-reopen modal race and fixed it by clearing the pending close timer. Existing-note title changes now send only the title, so they can save even when migration 010 has not been applied. First-open typing worked in the local browser; the exact reported first-open failure could not be reproduced without the user's signed-in browser session.
+
+**Verification:** Headless Chrome smoke passed at effective widths 500px and 1264px for create, type, rename, and combined title/body save. `node --check js/notes.js`, four note-format tests, and `git diff --check` passed. Rich-text body saving still requires migration 010.
 
 ---
 

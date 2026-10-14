@@ -1,9 +1,25 @@
 # Decisions Log
 
-## Current State Summary (Updated: 2026-10-14)
+## Current State Summary (Updated: 2026-10-15)
 
-- **Latest Decision:** Find searches the open note body in memory, without changing saved content
+- **Latest Decision:** Skip Quill formatting checks when the note body has lost focus, so a title click stays in the title input
 - **In Progress:** None — permissions feature complete
+
+---
+
+## [2026-10-15] — Open-note title focus
+
+**Decision:** Guard `_updateFormatButtons()` with Quill's `hasFocus()` before calling `getFormat()`.
+
+**Why:** A real-click trace showed the title input receiving focus, then Quill's `getFormat()` taking focus back when the editor's selection changed on blur. The guard prevents the focus steal without changing title input or editor behavior.
+
+---
+
+## [2026-10-15] — Note title reliability
+
+**Decision:** Track title and body change versions separately while retaining the existing save queue. A title-only edit sends `{ title }`; a body edit sends `content` and `content_delta`. Use `Confirm.showModal` for New Note to clear any pending close timer.
+
+**Why:** The rich-text migration is still pending in the project logs, so sending `content_delta` on every rename makes an otherwise simple title edit fail. The modal utility already handles rapid reopen safely.
 
 ---
 
